@@ -2,6 +2,7 @@
 using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
+using Microsoft.AspNetCore.Http;
 
 namespace DataAccess;
 
@@ -34,14 +35,16 @@ public class DataSqlUser
         await connection.OpenAsync();
 
         var command = new SqlCommand(
-            $"insert into dbo.Orders values (\'{order.Description}\', \'{order.Service}\',\'{order.GetOrder}\'," +
-            $"\'{order.CompletedOrder}\',\'{order.Price}\', \'{order.UserId}\')"
+            $"insert into Orders values (\'{order.MiniDescription}\', {order.Description},{order.GetOrder}," +
+            $"{order.CompletedOrder},{order.Price}, {order.UserId}, {order.Example} (select CityId from Cities c where c.CityName = {order.NameCity})," +
+            $" \'{order.Date}\', (select CategoryJobId from CategoriesJobs c where c.NameCategory = {order.CategoryWork}), " +
+            $"(select JobId from Jobs c where c.NameJob = {order.Work}))"
             , connection);
 
         await using var reader = await command.ExecuteReaderAsync();
 
         var commandCount = new SqlCommand(
-            $"UPDATE Users SET CountMadeOrder = CountMadeOrder + 1 WHERE CustomerId = {order.UserId}" + // TODO CUSTOMERiD
+            $"UPDATE Users SET CountMadeOrder = CountMadeOrder + 1 WHERE UserId = {order.UserId}" +
             " SELECT MAX(OrderId) FROM Orders;"
             , connection);
         await using var reader1 = await commandCount.ExecuteReaderAsync();
@@ -50,6 +53,26 @@ public class DataSqlUser
             orderId = (int)reader1.GetValue(0);
 
         return await GetOrder(orderId);
+    }
+
+    // public async byte[] ImageToByte(Image image)
+    // {
+    //     var ms = new MemoryStream();
+    //     image.Save();
+    // }
+
+    // todo сделать запрос на вытягивания отзывов по работодателю
+    public async Task AddFeedbackToEmployer(Feedback feedback)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand(
+            $"insert into Feedback values ({feedback.UserId}, (select CompanyId from Orders o where o.OrderId = {feedback.OrderId})," +
+            $"(select HandcraftId from Orders o where o.OrderId = {feedback.OrderId}), {feedback.OrderId}, \'{feedback.Description}\')",
+            connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
     }
 
     public async Task<User> Update(User user)
@@ -87,7 +110,7 @@ public class DataSqlUser
         var command = new SqlCommand(
             "UPDATE Orders SET" +
             $"Description = '{order.Description}'," +
-            $"ServiceId = {order.Service}," +
+            $"MiniDescription = {order.MiniDescription}," +
             $"Price = {order.Price}" +
             $"WHERE OrderId = {order.Id}", connection);
 
@@ -110,18 +133,18 @@ public class DataSqlUser
         await using var reader = await command.ExecuteReaderAsync();
         if (reader.HasRows && reader.ReadAsync().Result)
         {
-            customerGet.CountMadeOrders = (int)reader.GetValue(2);
-            customerGet.LastName = reader.GetValue(3).ToString();
-            customerGet.Name = reader.GetValue(4).ToString();
-            customerGet.Patronymic = reader.GetValue(5).ToString();
-            customerGet.DateOfBrith = reader.GetValue(6).ToString();
-            customerGet.Phone = reader.GetValue(7).ToString();
-            customerGet.CityId = (int)reader.GetValue(8);
-            customerGet.Image = (byte[])reader.GetValue(9);
-            customerGet.Email = reader.GetValue(10).ToString();
-            customerGet.Password = reader.GetValue(11).ToString();
-            customerGet.LinkTelegram = reader.GetValue(12).ToString();
-            customerGet.LinkVk = reader.GetValue(13).ToString();
+            customerGet.CountMadeOrders = (int)reader.GetValue(1);
+            customerGet.LastName = reader.GetValue(2).ToString();
+            customerGet.Name = reader.GetValue(3).ToString();
+            customerGet.Patronymic = reader.GetValue(4).ToString();
+            customerGet.DateOfBrith = reader.GetValue(5).ToString();
+            customerGet.Phone = reader.GetValue(6).ToString();
+            customerGet.CityId = (int)reader.GetValue(7);
+            customerGet.Image = (byte[])reader.GetValue(8);
+            customerGet.Email = reader.GetValue(9).ToString();
+            customerGet.Password = reader.GetValue(10).ToString();
+            customerGet.LinkTelegram = reader.GetValue(11).ToString();
+            customerGet.LinkVk = reader.GetValue(12).ToString();
         }
 
         return customerGet;
@@ -217,8 +240,8 @@ public class DataSqlUser
         if (reader.HasRows && reader.ReadAsync().Result)
         {
             order.Id = (int)reader.GetValue(0);
-            order.Description = reader.GetValue(1).ToString();
-            order.Service = reader.GetValue(2) == null ? (int)reader.GetValue(2) : 0;
+            order.MiniDescription = reader.GetValue(1).ToString();
+            order.Description = reader.GetValue(2).ToString();
             order.GetOrder = (bool)reader.GetValue(3);
             order.CompletedOrder = (bool)reader.GetValue(4);
             order.Price = (int)reader.GetValue(5);
@@ -226,8 +249,48 @@ public class DataSqlUser
             order.CompanyId = reader.GetValue(7) == null ? (int)reader.GetValue(7) : 0;
             order.HandcraftId = reader.GetValue(8) == null ? (int)reader.GetValue(8) : 0;
         }
-        
+
         return order;
+    }
+
+    public async Task<Order[]> GetOrders()
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand(
+            "select OrderId, MiniDescription, o.Description, CityName, Price, Date, NameCategory, NameJob, Example" +
+            "from Orders o" +
+            "left join Cities C on o.CityId = C.CityId" +
+            "left join CategoriesJobs CJ on o.TypeJobId = CJ.CategoryJobId" +
+            "left join Jobs J on CJ.CategoryJobId = J.CategoryJobId" +
+            "where o.GetOrder = 0" +
+            "and o.CompletedOrder = 0", connection);
+        var orders = new List<Order>();
+
+        await using var reader = await command.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            while (reader.ReadAsync().Result)
+            {
+                var id = (int)reader.GetValue(0);
+                var miniDescription = reader.GetValue(1).ToString();
+                var description = reader.GetValue(2).ToString();
+                var city = reader.GetValue(3).ToString();
+                var price = (int)reader.GetValue(4);
+                var date = reader.GetValue(5)?.ToString();
+                var nameCategory = reader.GetValue(6)?.ToString();
+                var nameJob = reader.GetValue(6)?.ToString();
+                var photo = (byte[])reader.GetValue(7);
+                orders.Add(new Order
+                {
+                    Id = id, MiniDescription = miniDescription, Description = description, NameCity = city,
+                    Price = price, Date = date, CategoryWork = nameCategory, Work = nameJob
+                });
+            }
+        }
+
+        return orders.ToArray();
     }
 
     /// Получение заказов у конкретного пользователя
@@ -247,14 +310,14 @@ public class DataSqlUser
             while (reader.ReadAsync().Result)
             {
                 var description = reader.GetValue(1).ToString();
-                var service = (int)reader.GetValue(2);
+                var miniDescription = reader.GetValue(2).ToString();
                 var getOrder = (bool)reader.GetValue(3);
                 var completedOrder = (bool)reader.GetValue(4);
                 var price = (int)reader.GetValue(5);
                 orders.Add(new Order
                 {
-                    Description = description, Service = service, GetOrder = getOrder, CompletedOrder = completedOrder,
-                    Price = price
+                    Description = description, MiniDescription = miniDescription, GetOrder = getOrder,
+                    CompletedOrder = completedOrder, Price = price
                 });
             }
         }

@@ -6,12 +6,10 @@ public interface IServiceRepository
 {
     // Добавление
     Task<Service[]> AddService(Service service);
-    
     Task<CategoryWork[]> AddCategoryWork(CategoryWork categoryWork);
-    Task<Work> AddWork(Work work);
-
+    Task<Work> AddWork(Work work, int idWork, int idHandcraft);
     Task<TypeEquipment[]> AddTypeEquipment(TypeEquipment equipment);
-    Task<Equipment> AddEquipment(Equipment equipment);
+    Task<Equipment> AddEquipment(Equipment equipment, int idWork, int idHandcraft);
     
     // Обновление
     Task<Work> UpdateWork(Work work);
@@ -28,6 +26,6 @@ public interface IServiceRepository
     
     // Со специальными параметрами
     Task<Work[]> SearchWorkFromCity(string nameCity);
-    Task<Equipment[]> SearchWorkFromEquipment(string nameCity);
+    Task<Equipment[]> SearchEquipmentFromCity(string nameCity);
     
 }

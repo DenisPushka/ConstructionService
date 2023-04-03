@@ -10,3 +10,10 @@ C:\Users\User\RiderProjects\ConstructionService\Domain\obj\Debug\net7.0\Domain.d
 C:\Users\User\RiderProjects\ConstructionService\Domain\obj\Debug\net7.0\refint\Domain.dll
 C:\Users\User\RiderProjects\ConstructionService\Domain\obj\Debug\net7.0\Domain.pdb
 C:\Users\User\RiderProjects\ConstructionService\Domain\obj\Debug\net7.0\ref\Domain.dll
+C:\Users\User\RiderProjects\ConstructionService\Domain\bin\Debug\net7.0\Microsoft.AspNetCore.Http.Features.dll
+C:\Users\User\RiderProjects\ConstructionService\Domain\bin\Debug\net7.0\Microsoft.Net.Http.Headers.dll
+C:\Users\User\RiderProjects\ConstructionService\Domain\bin\Debug\net7.0\Microsoft.Extensions.Primitives.dll
+C:\Users\User\RiderProjects\ConstructionService\Domain\bin\Debug\net7.0\System.IO.Pipelines.dll
+C:\Users\User\RiderProjects\ConstructionService\Domain\bin\Debug\net7.0\Microsoft.AspNetCore.Connections.Abstractions.dll
+C:\Users\User\RiderProjects\ConstructionService\Domain\bin\Debug\net7.0\Microsoft.Extensions.Features.dll
+C:\Users\User\RiderProjects\ConstructionService\Domain\obj\Debug\net7.0\Domain.csproj.CopyComplete

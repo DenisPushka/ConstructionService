@@ -16,9 +16,11 @@ public class Startup
         services.AddTransient<DataSqlUser>();
         services.AddTransient<DataSqlCompany>();
         services.AddTransient<DataSqlFeedBack>();
+        services.AddTransient<DataSqlService>();
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<ICompanyRepository, CompanyRepository>();
         services.AddTransient<ICityRepository, CityRepository>();
+        services.AddTransient<IServiceRepository, ServiceRepository>();
         services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
         services.AddMvcCore();
         services.AddMvc();

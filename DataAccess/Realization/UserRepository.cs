@@ -50,6 +50,11 @@ public class UserRepository : IUserRepository
         return await _context.AddOrder(order);
     }
 
+    public async Task AddFeedbackToEmployer(Feedback feedback)
+    {
+        await _context.AddFeedbackToEmployer(feedback);
+    }
+
     public async Task<User> UpdateUser(User user)
     {
         return await _context.Update(user);

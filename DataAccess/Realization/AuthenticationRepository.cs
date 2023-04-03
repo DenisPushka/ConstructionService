@@ -9,7 +9,7 @@ public class AuthenticationRepository : IAuthenticationRepository
 
     public AuthenticationRepository(DataSql context) => _context = context;
 
-    public async Task<char> Authentication(UserAuthentication userAuthentication)
+    public async Task<bool> Authentication(UserAuthentication userAuthentication)
     {
         return await _context.Authentication(userAuthentication);
     }

@@ -16,6 +16,7 @@ public interface IUserRepository
     // Добавление
     Task<User> AddUser(User user);
     Task<Order> AddOrder(Order order);
+    Task AddFeedbackToEmployer(Feedback feedback);
 
     // Обновление
     Task<User> UpdateUser(User user);

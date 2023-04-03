@@ -5,9 +5,9 @@ namespace DataAccess.Realization;
 
 public class ServiceRepository : IServiceRepository
 {
-    private readonly DaraSqlService _service;
+    private readonly DataSqlService _service;
 
-    public ServiceRepository(DaraSqlService service)
+    public ServiceRepository(DataSqlService service)
     {
         _service = service;
     }
@@ -22,9 +22,9 @@ public class ServiceRepository : IServiceRepository
         return await _service.AddCategoryWork(categoryWork);
     }
 
-    public async Task<Work> AddWork(Work work)
+    public async Task<Work> AddWork(Work work, int idWork, int idHandcraft)
     {
-        return await _service.AddWork(work);
+        return await _service.AddWork(work, idWork, idHandcraft);
     }
 
     public async Task<TypeEquipment[]> AddTypeEquipment(TypeEquipment equipment)
@@ -32,9 +32,9 @@ public class ServiceRepository : IServiceRepository
         return await _service.AddTypeEquipment(equipment);
     }
 
-    public async Task<Equipment> AddEquipment(Equipment equipment)
+    public async Task<Equipment> AddEquipment(Equipment equipment, int idWork, int idHandcraft)
     {
-        return await _service.AddEquipment(equipment);
+        return await _service.AddEquipment(equipment, idWork, idHandcraft);
     }
 
     public async Task<Work> UpdateWork(Work work)
@@ -49,45 +49,45 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<Work> GetWork(string nameWork)
     {
-        return new Work();
+        return await _service.GetWork(nameWork);
     }
 
-    public Task<Equipment> GetEquipment(int equipmentId)
+    public async Task<Equipment> GetEquipment(int equipmentId)
+    {
+        return await _service.GetEquipment(equipmentId);
+    }
+
+    public async Task<Service[]> GetServices()
+    {
+        return await _service.GetServices();
+    }
+
+    public async Task<CategoryWork[]> GetCategoryWork()
+    {
+        return await _service.GetCategoriesWork();
+    }
+
+    public async Task<TypeEquipment[]> GetTypeEquipments()
+    {
+        return await _service.GetTypeEquipments();
+    }
+
+    public async Task<Work[]> GetWorks()
     {
         throw new NotImplementedException();
     }
 
-    public Task<Service[]> GetServices()
+    public async Task<Equipment[]> GetEquipments()
     {
         throw new NotImplementedException();
     }
 
-    public Task<CategoryWork[]> GetCategoryWork()
+    public async Task<Work[]> SearchWorkFromCity(string nameCity)
     {
         throw new NotImplementedException();
     }
 
-    public Task<TypeEquipment[]> GetTypeEquipments()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Work[]> GetWorks()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Equipment[]> GetEquipments()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Work[]> SearchWorkFromCity(string nameCity)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Equipment[]> SearchWorkFromEquipment(string nameCity)
+    public async Task<Equipment[]> SearchEquipmentFromCity(string nameCity)
     {
         throw new NotImplementedException();
     }

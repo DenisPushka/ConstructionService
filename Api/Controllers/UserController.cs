@@ -22,7 +22,7 @@ public class UserController : ControllerBase
     [HttpGet("GetUsers")]
     public async Task<User[]> GetUsers() => await _userRepository.GetUsers();
 
-    [HttpGet("City/{city}")]
+    [HttpGet("City/\'{city}\'")]
     public async Task<User[]> GetUserWhereSearchCity([FromRoute] string city)
     {
         return await _userRepository.GetUserWhereSearchCity(city);
@@ -46,6 +46,11 @@ public class UserController : ControllerBase
         return await _userRepository.AddUser(user);
     }
 
+    public async Task AddFeedbackToEmployer(Feedback feedback)
+    {
+        await _userRepository.AddFeedbackToEmployer(feedback);
+    }
+
     [HttpPost("UpdateUser")]
     public async Task<User> ChangeUser(User user)
     {
@@ -53,11 +58,18 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("AddOrder")]
-    public async Task<Order> AddOrder(Order order)
+    public async Task<Order> AddOrder([FromForm]Order order)
     {
+        long length = order.Example.Length;
+        if (length < 0)
+            return new Order();
+
+        using var fileStream = order.Example[0].OpenReadStream();
+        byte[] bytes = new byte[length];
+        fileStream.Read(bytes, 0, order.Example.Length);
         return await _userRepository.AddOrder(order);
     }
-    
+
     [HttpPost("UpdateOrder")]
     public async Task<Order> ChangeOrder(Order order)
     {

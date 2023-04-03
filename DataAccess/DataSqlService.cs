@@ -1,10 +1,9 @@
 ﻿using System.Data.SqlClient;
-using DataAccess.models;
 using Domain.Models.Service;
 
 namespace DataAccess;
 
-public class DaraSqlService
+public class DataSqlService
 {
     private const string ConnectionString =
         "Server=DenisBaranovski;Database=ConstructionService;Trusted_Connection=True;TrustServerCertificate=Yes;";
@@ -33,15 +32,23 @@ public class DaraSqlService
         return await GetCategoriesWork();
     }
 
-    public async Task<Work> AddWork(Work work)
+    public async Task<Work> AddWork(Work work, int companyId, int handcraftId)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
         var command = new SqlCommand($"INSERT INTO Jobs VALUES (\'{work.Name}\'," +
                                      $" \'{work.Description}\', \'{work.CategoryWorkId}\')", connection);
-
         await using var reader = await command.ExecuteReaderAsync();
+        await connection.CloseAsync();
+
+        await connection.OpenAsync();
+        // создание связи многие ко многим
+        command = new SqlCommand($"INSERT INTO JobsSubject VALUES ({companyId}, +" +
+                                 $" {handcraftId}, (select Max(JobId) from Jobs))", connection);
+        await using var reader1 = await command.ExecuteReaderAsync();
+        await connection.CloseAsync();
+        
         return await GetWork(work.Name);
     }
 
@@ -57,7 +64,7 @@ public class DaraSqlService
         return await GetTypeEquipments();
     }
 
-    public async Task<Equipment> AddEquipment(Equipment equipment)
+    public async Task<Equipment> AddEquipment(Equipment equipment, int companyId, int handcraftId)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
@@ -71,6 +78,14 @@ public class DaraSqlService
         var id = 0;
         if (reader.HasRows)
             id = (int)reader.GetValue(0);
+        
+        await connection.OpenAsync();
+        // создание связи многие ко многим
+        command = new SqlCommand($"INSERT INTO EquipmentsSubject VALUES ({companyId}, +" +
+                                 $" {handcraftId}, (select Max(EquipmentId) from Equipments))", connection);
+        await using var reader1 = await command.ExecuteReaderAsync();
+        await connection.CloseAsync();
+        
         return await GetEquipment(id);
     }
 

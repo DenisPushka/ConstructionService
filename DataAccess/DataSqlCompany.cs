@@ -1,4 +1,5 @@
 ﻿using System.Data.SqlClient;
+using Domain.Models;
 using Domain.Models.Users;
 using SqlCommand = System.Data.SqlClient.SqlCommand;
 
@@ -9,18 +10,22 @@ public class DataSqlCompany
     private const string ConnectionString =
         "Server=DenisBaranovski;Database=ConstructionService;Trusted_Connection=True;TrustServerCertificate=Yes;";
 
+    // TODO прописать для получения id для добавления работы или сервиса
     public async Task<Company> Get(Company company)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        // TODO возможно добавить пароль
-        var command = new SqlCommand("SELECT * FROM Company WHERE Email = \'{company.Email}\'", connection);
+        var command =
+            new SqlCommand(
+                $"SELECT * FROM Company WHERE Email = \'{company.Email}\' and Password = \'{company.Password}\'",
+                connection);
 
         await using var reader = await command.ExecuteReaderAsync();
         var companyGet = new Company();
         if (reader.HasRows && reader.ReadAsync().Result)
         {
+            companyGet.Id = (int)reader.GetValue(0);
             companyGet.Name = reader.GetValue(1).ToString();
             companyGet.Description = reader.GetValue(2).ToString();
             companyGet.Email = reader.GetValue(3).ToString();
@@ -42,13 +47,12 @@ public class DataSqlCompany
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        // TODO возможно добавить пароль
         var command = new SqlCommand(
             "SELECT name, description, email, password, ratingId, phone, link, CityName, Street, Home" +
             " FROM Company INNER JOIN ContactCompany ON Company.CompanyId = ContactCompany.CompanyId " +
             " INNER JOIN Addresses ON ContactCompany.ContactCompanyId = Addresses.ContactCompanyId " +
             " INNER JOIN Cities ON Addresses.CityId = Cities.CityId" +
-            $" WHERE Email = '{company.Email}'", connection);
+            $" WHERE Email = \'{company.Email}\' AND Password = \'{company.Password}\'", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
         var companyGet = new Company();
@@ -75,6 +79,32 @@ public class DataSqlCompany
         return new[] { new Company() };
     }
 
+    public async Task<Feedback[]> GetFeedbacks(Company company)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand(
+            "select Userid, Description From Feedbacks" +
+            $" WHERE CompanyId = (select CompanyId from Company c Where c.Email = \'{company.Email}\')"
+            , connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        var feedbacks = new List<Feedback>();
+        if (reader.HasRows)
+        {
+            while (reader.ReadAsync().Result)
+            {
+                var userId = (int)reader.GetValue(0);
+                var description = reader.GetValue(1).ToString();
+                feedbacks.Add(new Feedback {UserId = userId, Description = description});
+            }
+        }
+
+        return feedbacks.ToArray();
+    }
+    
+    // ДОБАВЛЕНИЕ
     public async Task<Company> Add(Company company)
     {
         // Проверка пользователя в системе
@@ -167,14 +197,15 @@ public class DataSqlCompany
         await using var reader = await command.ExecuteReaderAsync();
     }
 
-    public async Task RemoveOrder(int orderId)
+    public async Task RemoveOrder(int orderId, int companyId, int handcraftId)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
         var command = new SqlCommand(
-            $"UPDATE Orders SET CompanyId = 0, GetOrder = 0 WHERE OrderId = {orderId}",
+            $"UPDATE Orders SET CompanyId = 0, GetOrder = 0 WHERE OrderId = {orderId}; " +
+            $"INSERT INTO NotExecuteOrders VALUES ({orderId}, {companyId}, {handcraftId})",
             connection);
-
         await using var reader = await command.ExecuteReaderAsync();
+        await connection.CloseAsync();
     }
 }

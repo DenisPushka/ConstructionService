@@ -1,5 +1,4 @@
 ﻿using DataAccess.Interface;
-using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
 
@@ -36,6 +35,11 @@ public class CompanyRepository : ICompanyRepository
         return await _sql.GetCompanyFromCity(city);
     }
 
+    public async Task<Feedback[]> GetFeedbacks(Company company)
+    {
+        return await _sql.GetFeedbacks(company);
+    }
+
     public async Task<Company> AddCompany(Company company)
     {
         return await _sql.Add(company);
@@ -56,9 +60,9 @@ public class CompanyRepository : ICompanyRepository
         await _sql.TakeOrder(company, orderId);
     }
 
-    public async Task RemoveOrder(int orderId)
+    public async Task RemoveOrder(int orderId, int companyId, int handcraftId)
     {
-        await _sql.RemoveOrder(orderId);
+        await _sql.RemoveOrder(orderId, companyId, handcraftId);
     }
 
     public async Task<bool> PushMailToCustomer(Feedback feedback)

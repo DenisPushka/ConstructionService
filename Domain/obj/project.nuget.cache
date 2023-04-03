@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "0i/q4HKaM7XKb04R2hQZ9Vwq4CYdUdZqrVhxDBD3F2dgZMzXPkfTcBhzHESOCF9FhYPjKViA0s+xcLvKPmOvDg==",
+  "dgSpecHash": "qHo9mWdofuyUDyKGJM59BwrtIevksr3vj5aYKY1To92SyjpzA/PHBaB1Z5aMKS3i5YQJNIWQs3qeVRc158ZsoA==",
   "success": true,
   "projectFilePath": "C:\\Users\\User\\RiderProjects\\ConstructionService\\Domain\\Domain.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\User\\.nuget\\packages\\microsoft.win32.systemevents\\8.0.0-preview.2.23128.3\\microsoft.win32.systemevents.8.0.0-preview.2.23128.3.nupkg.sha512",
+    "C:\\Users\\User\\.nuget\\packages\\system.drawing.common\\8.0.0-preview.2.23128.3\\system.drawing.common.8.0.0-preview.2.23128.3.nupkg.sha512"
+  ],
   "logs": []
 }
