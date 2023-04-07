@@ -1,4 +1,6 @@
 ﻿using System.Data.SqlClient;
+using System.Drawing;
+using System.Net.Mime;
 using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
@@ -34,34 +36,33 @@ public class DataSqlUser
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var command = new SqlCommand(
-            $"insert into Orders values (\'{order.MiniDescription}\', {order.Description},{order.GetOrder}," +
-            $"{order.CompletedOrder},{order.Price}, {order.UserId}, {order.Example} (select CityId from Cities c where c.CityName = {order.NameCity})," +
-            $" \'{order.Date}\', (select CategoryJobId from CategoriesJobs c where c.NameCategory = {order.CategoryWork}), " +
-            $"(select JobId from Jobs c where c.NameJob = {order.Work}))"
-            , connection);
+        var query = "insert into Orders (miniDescription, description, price, userId, cityId, date, example)" +
+                    $" values (@miniDescription, @description, @price, @userId, (select CityId from Cities c where c.CityName = \'{order.NameCity}\')" +
+                    ", @date, @example)";
+        var command = new SqlCommand(query, connection);
+        command.Parameters.AddWithValue("@miniDescription", order.MiniDescription);
+        command.Parameters.AddWithValue("@description", order.Description);
+        command.Parameters.AddWithValue("@price", order.Price);
+        command.Parameters.AddWithValue("@userId", order.UserId);
+        command.Parameters.AddWithValue("@date", order.Date);
+        command.Parameters.AddWithValue("@example", order.Example);
 
         await using var reader = await command.ExecuteReaderAsync();
-
+        await connection.CloseAsync();
+        await connection.OpenAsync();
         var commandCount = new SqlCommand(
             $"UPDATE Users SET CountMadeOrder = CountMadeOrder + 1 WHERE UserId = {order.UserId}" +
             " SELECT MAX(OrderId) FROM Orders;"
             , connection);
         await using var reader1 = await commandCount.ExecuteReaderAsync();
         var orderId = 0;
-        if (reader.HasRows)
+        if (reader1.HasRows && reader1.ReadAsync().Result)
             orderId = (int)reader1.GetValue(0);
 
+        await connection.CloseAsync();
         return await GetOrder(orderId);
     }
 
-    // public async byte[] ImageToByte(Image image)
-    // {
-    //     var ms = new MemoryStream();
-    //     image.Save();
-    // }
-
-    // todo сделать запрос на вытягивания отзывов по работодателю
     public async Task AddFeedbackToEmployer(Feedback feedback)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -140,7 +141,8 @@ public class DataSqlUser
             customerGet.DateOfBrith = reader.GetValue(5).ToString();
             customerGet.Phone = reader.GetValue(6).ToString();
             customerGet.CityId = (int)reader.GetValue(7);
-            customerGet.Image = (byte[])reader.GetValue(8);
+            var obj = reader.GetValue(8);
+            customerGet.Image = obj == typeof(DBNull) ? Array.Empty<byte>() : (byte[])obj;
             customerGet.Email = reader.GetValue(9).ToString();
             customerGet.Password = reader.GetValue(10).ToString();
             customerGet.LinkTelegram = reader.GetValue(11).ToString();
@@ -197,7 +199,7 @@ public class DataSqlUser
         var command = new SqlCommand(
             "select CountMadeOrder, LastName, Name, Patronymic, DateOfBrith, Phone, Photo, Email, Password, " +
             "LinkTelegram, LinkVk, CityName from Users INNER JOIN " +
-            "Cities ON dbo.Users.CityId = dbo.Cities.CityId $" +
+            "Cities ON dbo.Users.CityId = dbo.Cities.CityId " +
             $"where dbo.Cities.CityName = \'{nameCity}\'", connection);
         var users = new List<User>();
 
@@ -246,9 +248,20 @@ public class DataSqlUser
             order.CompletedOrder = (bool)reader.GetValue(4);
             order.Price = (int)reader.GetValue(5);
             order.UserId = (int)reader.GetValue(6);
-            order.CompanyId = reader.GetValue(7) == null ? (int)reader.GetValue(7) : 0;
-            order.HandcraftId = reader.GetValue(8) == null ? (int)reader.GetValue(8) : 0;
+            order.Date = reader.GetValue(9).ToString();
+            order.Example = (byte[])reader["Example"]; // проверить
         }
+
+        await connection.CloseAsync();
+
+        // await connection.OpenAsync();
+        // var cmd = new SqlCommand($"select (Example) from Orders where OrderId = {orderId}", connection);
+        // var rear = await cmd.ExecuteReaderAsync();
+        // await rear.ReadAsync();
+        // order.Example = (byte[])rear["Example"];
+        // // MemoryStream photo = new MemoryStream();
+        // // order.Example = Image.FromStream(photo);
+        // await connection.CloseAsync();
 
         return order;
     }
@@ -260,11 +273,11 @@ public class DataSqlUser
 
         var command = new SqlCommand(
             "select OrderId, MiniDescription, o.Description, CityName, Price, Date, NameCategory, NameJob, Example" +
-            "from Orders o" +
-            "left join Cities C on o.CityId = C.CityId" +
-            "left join CategoriesJobs CJ on o.TypeJobId = CJ.CategoryJobId" +
-            "left join Jobs J on CJ.CategoryJobId = J.CategoryJobId" +
-            "where o.GetOrder = 0" +
+            " from Orders o " +
+            "left join Cities C on o.CityId = C.CityId " +
+            "left join CategoriesJobs CJ on o.TypeJobId = CJ.CategoryJobId " +
+            "left join Jobs J on CJ.CategoryJobId = J.CategoryJobId " +
+            "where o.GetOrder = 0 " +
             "and o.CompletedOrder = 0", connection);
         var orders = new List<Order>();
 
@@ -281,11 +294,11 @@ public class DataSqlUser
                 var date = reader.GetValue(5)?.ToString();
                 var nameCategory = reader.GetValue(6)?.ToString();
                 var nameJob = reader.GetValue(6)?.ToString();
-                var photo = (byte[])reader.GetValue(7);
+                var photo = (byte[])reader["Example"];
                 orders.Add(new Order
                 {
                     Id = id, MiniDescription = miniDescription, Description = description, NameCity = city,
-                    Price = price, Date = date, CategoryWork = nameCategory, Work = nameJob
+                    Price = price, Date = date, CategoryWork = nameCategory, Work = nameJob, Example = photo
                 });
             }
         }

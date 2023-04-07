@@ -22,8 +22,8 @@ public class User
 
     public byte[]? Image { get; set; }
     public string? Email { get; set; } = string.Empty;
+    public string? Password { get; set; }  = string.Empty;
     public string? LinkTelegram { get; set; } = string.Empty;
     public string? LinkVk { get; set; } = string.Empty;
     
-    public string? Password { get; set; }  = string.Empty;
 }

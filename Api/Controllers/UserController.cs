@@ -1,4 +1,5 @@
-﻿using DataAccess.Interface;
+﻿using Api.Models;
+using DataAccess.Interface;
 using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
@@ -34,6 +35,12 @@ public class UserController : ControllerBase
         return await _userRepository.GetOrder(orderId);
     }
 
+    [HttpGet("getOrders")]
+    public async Task<Order[]> GetOrders()
+    {
+        return await _userRepository.GetOrders();
+    }
+
     [HttpPost("ReceivingOrders")]
     public async Task<Order[]> ReceivingOrder(UserAuthentication user)
     {
@@ -58,16 +65,10 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("AddOrder")]
-    public async Task<Order> AddOrder([FromForm]Order order)
+    public async Task<Order> AddOrder([FromForm]OrderFromVie order)
     {
-        long length = order.Example.Length;
-        if (length < 0)
-            return new Order();
-
-        using var fileStream = order.Example[0].OpenReadStream();
-        byte[] bytes = new byte[length];
-        fileStream.Read(bytes, 0, order.Example.Length);
-        return await _userRepository.AddOrder(order);
+        // return await order.OrderVieToOrder();
+        return await _userRepository.AddOrder(await order.OrderVieToOrder());
     }
 
     [HttpPost("UpdateOrder")]

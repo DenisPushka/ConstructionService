@@ -9,12 +9,13 @@ public class UserRepository : IUserRepository
 {
     private readonly DataSqlUser _context;
     private readonly DataSqlFeedBack _feedBack;
+
     public UserRepository(DataSqlUser context, DataSqlFeedBack feedBack)
     {
         _context = context;
         _feedBack = feedBack;
     }
-    
+
     public async Task<User> GetUser(UserAuthentication user)
     {
         return await _context.Get(user);
@@ -33,6 +34,11 @@ public class UserRepository : IUserRepository
     public async Task<Order> GetOrder(int orderId)
     {
         return await _context.GetOrder(orderId);
+    }
+
+    public async Task<Order[]> GetOrders()
+    {
+        return await _context.GetOrders();
     }
 
     public async Task<Order[]> ReceivingOrders(UserAuthentication user)
@@ -69,5 +75,4 @@ public class UserRepository : IUserRepository
     {
         return await _feedBack.SendToContactor(feedback);
     }
-
 }

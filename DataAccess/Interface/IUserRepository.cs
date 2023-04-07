@@ -11,6 +11,7 @@ public interface IUserRepository
     Task<User[]> GetUsers();
     Task<User[]> GetUserWhereSearchCity(string city);
     Task<Order> GetOrder(int orderId);
+    Task<Order[]> GetOrders();
     Task<Order[]> ReceivingOrders(UserAuthentication user);
 
     // Добавление
