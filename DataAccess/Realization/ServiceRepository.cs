@@ -74,12 +74,12 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<Work[]> GetWorks()
     {
-        throw new NotImplementedException();
+        return await _service.GetWorks();
     }
 
     public async Task<Equipment[]> GetEquipments()
     {
-        throw new NotImplementedException();
+        return await _service.GetEquipments();
     }
 
     public async Task<Work[]> SearchWorkFromCity(string nameCity)

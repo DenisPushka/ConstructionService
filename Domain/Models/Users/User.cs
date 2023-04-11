@@ -14,10 +14,6 @@ public class User
     public string? Patronymic { get; set; } = string.Empty;
     public string? DateOfBrith { get; set; } = string.Empty;
     public string? Phone { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Ключ к таблице "Города"
-    /// </summary>
     public int CityId { get; set; }
 
     public byte[]? Image { get; set; }

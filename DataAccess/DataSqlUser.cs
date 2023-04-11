@@ -1,10 +1,7 @@
 ﻿using System.Data.SqlClient;
-using System.Drawing;
-using System.Net.Mime;
 using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
-using Microsoft.AspNetCore.Http;
 
 namespace DataAccess;
 
@@ -36,28 +33,30 @@ public class DataSqlUser
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var query = "insert into Orders (miniDescription, description, price, userId, cityId, date, example)" +
-                    $" values (@miniDescription, @description, @price, @userId, (select CityId from Cities c where c.CityName = \'{order.NameCity}\')" +
-                    ", @date, @example)";
+        var query = "insert into Times (DateStart, DateEnd, CountDay, CountRemainingDay) " +
+                    "values (@dateStart, @dateEnd, @countDay, @countRemainDay) " +
+                    "insert into Orders (minidescription, description, price, userid, cityid, TimeId, typejobid, jobid, example) " +
+                    $"values (@miniDescription, @description, @price, @userId, (select (CityId) from Cities where CityName = \'{order.NameCity}\'), (SELECT MAX(TimeId) FROM Times), @typeJobId, @jobId, @example);" +
+                    " SELECT MAX(OrderId) FROM Orders";
+
         var command = new SqlCommand(query, connection);
         command.Parameters.AddWithValue("@miniDescription", order.MiniDescription);
         command.Parameters.AddWithValue("@description", order.Description);
         command.Parameters.AddWithValue("@price", order.Price);
         command.Parameters.AddWithValue("@userId", order.UserId);
-        command.Parameters.AddWithValue("@date", order.Date);
-        command.Parameters.AddWithValue("@example", order.Example);
+        // command.Parameters.AddWithValue("@time", order.Time);
+        command.Parameters.AddWithValue("@typeJobId", int.Parse(order.CategoryJob));
+        command.Parameters.AddWithValue("@jobId", int.Parse(order.Job));
+        command.Parameters.AddWithValue("@example", order.Photo);
+        command.Parameters.AddWithValue("@dateStart", order.Time.DateStart);
+        command.Parameters.AddWithValue("@dateEnd", order.Time.DateEnd);
+        command.Parameters.AddWithValue("@countDay", order.Time.CountDay);
+        command.Parameters.AddWithValue("@countRemainDay", order.Time.CountRemainDay);
 
         await using var reader = await command.ExecuteReaderAsync();
-        await connection.CloseAsync();
-        await connection.OpenAsync();
-        var commandCount = new SqlCommand(
-            $"UPDATE Users SET CountMadeOrder = CountMadeOrder + 1 WHERE UserId = {order.UserId}" +
-            " SELECT MAX(OrderId) FROM Orders;"
-            , connection);
-        await using var reader1 = await commandCount.ExecuteReaderAsync();
         var orderId = 0;
-        if (reader1.HasRows && reader1.ReadAsync().Result)
-            orderId = (int)reader1.GetValue(0);
+        if (reader.HasRows && reader.ReadAsync().Result)
+            orderId = (int)reader.GetValue(0);
 
         await connection.CloseAsync();
         return await GetOrder(orderId);
@@ -81,7 +80,6 @@ public class DataSqlUser
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        // TODO возможно разбить
         var command = new SqlCommand(
             "UPDATE dbo.Users SET" +
             "[CountMadeOrders] = " + user.CountMadeOrders +
@@ -113,6 +111,11 @@ public class DataSqlUser
             $"Description = '{order.Description}'," +
             $"MiniDescription = {order.MiniDescription}," +
             $"Price = {order.Price}" +
+            $"CityId = {order.NameCity}" +
+            $"TimeId = {order.Time}" +
+            $"TypeJobId = {order.CategoryJob}" +
+            $"JobId = {order.Job}" +
+            $"Example = {order.Time}" +
             $"WHERE OrderId = {order.Id}", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -170,7 +173,7 @@ public class DataSqlUser
                 var lastname = reader.GetValue(2).ToString();
                 var name = reader.GetValue(3).ToString();
                 var patronymic = reader.GetValue(4).ToString();
-                var dateOfBr = reader.GetValue(5).ToString(); // reader.GetValue(5);
+                var dateOfBr = reader.GetValue(5).ToString();
                 var phone = reader.GetValue(6).ToString();
                 var city = (int)reader.GetValue(7);
                 var photo = (byte[])reader.GetValue(8);
@@ -236,7 +239,14 @@ public class DataSqlUser
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var command = new SqlCommand($"select * from Orders WHERE OrderId = {orderId}", connection);
+        var command = new SqlCommand(
+            "select OrderId, MiniDescription, o.Description, Price, UserId, CityName, o.TimeId, DateStart, DateEnd, CountDay, NameCategory, NameJob, Example " +
+            "from Orders o " +
+            "left join Cities C on o.CityId = C.CityId " +
+            "left join Times T on o.TimeId = T.TimeId " +
+            "left join CategoriesJobs CJ on o.TypeJobId = CJ.CategoryJobId " +
+            "left join Jobs J on o.JobId = J.JobId " +
+            $"where o.OrderId = {orderId} ", connection);
         await using var reader = await command.ExecuteReaderAsync();
         var order = new Order();
         if (reader.HasRows && reader.ReadAsync().Result)
@@ -244,25 +254,23 @@ public class DataSqlUser
             order.Id = (int)reader.GetValue(0);
             order.MiniDescription = reader.GetValue(1).ToString();
             order.Description = reader.GetValue(2).ToString();
-            order.GetOrder = (bool)reader.GetValue(3);
-            order.CompletedOrder = (bool)reader.GetValue(4);
-            order.Price = (int)reader.GetValue(5);
-            order.UserId = (int)reader.GetValue(6);
-            order.Date = reader.GetValue(9).ToString();
-            order.Example = (byte[])reader["Example"]; // проверить
+            order.Price = (int)reader.GetValue(3);
+            order.UserId = (int)reader.GetValue(4);
+            order.NameCity = reader.GetValue(5).ToString();
+            var time = new Time
+            {
+                Id = (int)reader.GetValue(6),
+                DateStart = reader.GetValue(7).ToString(),
+                DateEnd = reader.GetValue(8).ToString(),
+                CountDay = (int)reader.GetValue(9),
+            };
+            order.Time = time;
+            order.CategoryJob = reader.GetValue(10).ToString();
+            order.Job = reader.GetValue(11).ToString();
+            order.Photo = (byte[])reader["Example"];
         }
 
         await connection.CloseAsync();
-
-        // await connection.OpenAsync();
-        // var cmd = new SqlCommand($"select (Example) from Orders where OrderId = {orderId}", connection);
-        // var rear = await cmd.ExecuteReaderAsync();
-        // await rear.ReadAsync();
-        // order.Example = (byte[])rear["Example"];
-        // // MemoryStream photo = new MemoryStream();
-        // // order.Example = Image.FromStream(photo);
-        // await connection.CloseAsync();
-
         return order;
     }
 
@@ -272,34 +280,43 @@ public class DataSqlUser
         await connection.OpenAsync();
 
         var command = new SqlCommand(
-            "select OrderId, MiniDescription, o.Description, CityName, Price, Date, NameCategory, NameJob, Example" +
-            " from Orders o " +
+            "select OrderId, MiniDescription, o.Description, Price, UserId, CityName, o.TimeId, DateStart, DateEnd, CountDay, NameCategory, NameJob, Example " +
+            "from Orders o " +
             "left join Cities C on o.CityId = C.CityId " +
+            "left join Times T on o.TimeId = T.TimeId " +
             "left join CategoriesJobs CJ on o.TypeJobId = CJ.CategoryJobId " +
-            "left join Jobs J on CJ.CategoryJobId = J.CategoryJobId " +
+            "left join Jobs J on o.JobId = J.JobId " +
             "where o.GetOrder = 0 " +
             "and o.CompletedOrder = 0", connection);
         var orders = new List<Order>();
 
         await using var reader = await command.ExecuteReaderAsync();
+
         if (reader.HasRows)
         {
             while (reader.ReadAsync().Result)
             {
-                var id = (int)reader.GetValue(0);
-                var miniDescription = reader.GetValue(1).ToString();
-                var description = reader.GetValue(2).ToString();
-                var city = reader.GetValue(3).ToString();
-                var price = (int)reader.GetValue(4);
-                var date = reader.GetValue(5)?.ToString();
-                var nameCategory = reader.GetValue(6)?.ToString();
-                var nameJob = reader.GetValue(6)?.ToString();
-                var photo = (byte[])reader["Example"];
-                orders.Add(new Order
+                var order = new Order
                 {
-                    Id = id, MiniDescription = miniDescription, Description = description, NameCity = city,
-                    Price = price, Date = date, CategoryWork = nameCategory, Work = nameJob, Example = photo
-                });
+                    Id = (int)reader.GetValue(0),
+                    MiniDescription = reader.GetValue(1).ToString(),
+                    Description = reader.GetValue(2).ToString(),
+                    Price = (int)reader.GetValue(3),
+                    UserId = (int)reader.GetValue(4),
+                    NameCity = reader.GetValue(5).ToString()
+                };
+                var time = new Time
+                {
+                    Id = (int)reader.GetValue(6),
+                    DateStart = reader.GetValue(7).ToString(),
+                    DateEnd = reader.GetValue(8).ToString(),
+                    CountDay = (int)reader.GetValue(9),
+                };
+                order.Time = time;
+                order.CategoryJob = reader.GetValue(10).ToString();
+                order.Job = reader.GetValue(11).ToString();
+                order.Photo = (byte[])reader["Example"];
+                orders.Add(order);
             }
         }
 
@@ -310,11 +327,15 @@ public class DataSqlUser
     public async Task<Order[]> ReceivingOrders(UserAuthentication userAuth)
     {
         await using var connection = new SqlConnection(ConnectionString);
-        var user = await Get(userAuth);
-
         var command = new SqlCommand(
-            "SELECT Description, ServiceId, GetOrder, CompletedOrder, Price " +
-            $" FROM dbo.Orders INNER JOIN dbo.Users ON \'{user.Id}\' = UserId", connection);
+            "SELECT OrderId, MiniDescription, o.Description, GetOrder, CompletedOrder, Price, UserId,CityName, NameJob" +
+            " FROM  Orders o " +
+            "left join Cities C on o.CityId = C.CityId " +
+            "left join Times T on o.TimeId = T.TimeId " +
+            "left join CategoriesJobs CJ on o.TypeJobId = CJ.CategoryJobId " +
+            "left join Jobs J on o.JobId = J.JobId " +
+            $"inner join Users on o.UserId = (select (UserId) from Users where Email = \'{userAuth.Login}\')",
+            connection);
         var orders = new List<Order>();
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -322,16 +343,19 @@ public class DataSqlUser
         {
             while (reader.ReadAsync().Result)
             {
-                var description = reader.GetValue(1).ToString();
-                var miniDescription = reader.GetValue(2).ToString();
-                var getOrder = (bool)reader.GetValue(3);
-                var completedOrder = (bool)reader.GetValue(4);
-                var price = (int)reader.GetValue(5);
-                orders.Add(new Order
+                var order = new Order
                 {
-                    Description = description, MiniDescription = miniDescription, GetOrder = getOrder,
-                    CompletedOrder = completedOrder, Price = price
-                });
+                    Id = (int)reader.GetValue(0),
+                    MiniDescription = reader.GetValue(1).ToString(),
+                    Description = reader.GetValue(2).ToString(),
+                    GetOrder = (bool)reader.GetValue(3),
+                    CompletedOrder = (bool)reader.GetValue(4),
+                    Price = (int)reader.GetValue(5),
+                    UserId = (int)reader.GetValue(6),
+                    NameCity = reader.GetValue(7).ToString(),
+                    Job = reader.GetValue(8).ToString()
+                };
+                orders.Add(order);
             }
         }
 

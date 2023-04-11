@@ -48,7 +48,7 @@ public class UserController : ControllerBase
     }
     
     [HttpPost("Add")]
-    public async Task<User> AddUser(User user)
+    public async Task<User> AddUser([FromForm]User user)
     {
         return await _userRepository.AddUser(user);
     }

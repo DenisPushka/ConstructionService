@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace Domain.Models;
+﻿namespace Domain.Models;
 
 public class Order
 {
@@ -10,11 +8,11 @@ public class Order
     public bool GetOrder { get; set; }
     public bool CompletedOrder { get; set; }
     public int Price { get; set; }
-    public string? NameCity { get; set; } = "";
-    public string? Date { get; set; } = "";
-    public string? CategoryWork { get; set; } = "";
-    public string? Work { get; set; } = "";
-    public byte[] Example { get; set; } = new byte[0];
+    public string? NameCity { get; set; }= "";
+    public Time? Time { get; set; }
+    public string? CategoryJob { get; set; } = "";
+    public string? Job { get; set; } = "";
+    public byte[] Photo { get; set; } = new byte[0];
     public int UserId { get; set; } 
     public int CompanyId { get; set; } 
     public int HandcraftId { get; set; } 

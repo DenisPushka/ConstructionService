@@ -1,4 +1,5 @@
 ﻿using DataAccess.Interface;
+using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
 
@@ -7,15 +8,15 @@ namespace DataAccess.Realization;
 public class CompanyRepository : ICompanyRepository
 {
     private readonly DataSqlCompany _sql;
-    private DataSqlFeedBack _feedBack;
+    private readonly DataSqlFeedBack _feedBack;
     
     public CompanyRepository(DataSqlCompany sql, DataSqlFeedBack feedBack)
     {
         _sql = sql;
         _feedBack = feedBack;
     }
-
-    public async Task<Company> GetCompany(Company company)
+    
+    public async Task<Company> GetCompany(UserAuthentication company)
     {
         return await _sql.Get(company);
     }

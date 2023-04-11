@@ -1,4 +1,6 @@
-﻿using System.Data.SqlClient;
+﻿using System.Data;
+using System.Data.SqlClient;
+using Domain.Models;
 using Domain.Models.Service;
 
 namespace DataAccess;
@@ -48,7 +50,7 @@ public class DataSqlService
                                  $" {handcraftId}, (select Max(JobId) from Jobs))", connection);
         await using var reader1 = await command.ExecuteReaderAsync();
         await connection.CloseAsync();
-        
+
         return await GetWork(work.Name);
     }
 
@@ -78,14 +80,14 @@ public class DataSqlService
         var id = 0;
         if (reader.HasRows)
             id = (int)reader.GetValue(0);
-        
+
         await connection.OpenAsync();
         // создание связи многие ко многим
         command = new SqlCommand($"INSERT INTO EquipmentsSubject VALUES ({companyId}, +" +
                                  $" {handcraftId}, (select Max(EquipmentId) from Equipments))", connection);
         await using var reader1 = await command.ExecuteReaderAsync();
         await connection.CloseAsync();
-        
+
         return await GetEquipment(id);
     }
 
@@ -95,7 +97,6 @@ public class DataSqlService
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        // TODO возможно разбить
         var command = new SqlCommand(
             "UPDATE Jobs SET " +
             $"NameJob = \'{work.Name}\'," +
@@ -112,7 +113,6 @@ public class DataSqlService
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        // TODO возможно разбить
         var command = new SqlCommand(
             "UPDATE Equipment SET " +
             $"Name = \'{equipment.Name}\'," + // todo удоставериться, что запрос пройдет
@@ -135,6 +135,7 @@ public class DataSqlService
         await using var reader = await command.ExecuteReaderAsync();
         if (reader.HasRows && reader.ReadAsync().Result)
         {
+            getWork.Id = (int)reader.GetValue(0);
             getWork.Name = reader.GetValue(1).ToString();
             getWork.Description = reader.GetValue(2).ToString();
             getWork.CategoryWorkId = (int)reader.GetValue(3);
@@ -153,6 +154,7 @@ public class DataSqlService
         await using var reader = await command.ExecuteReaderAsync();
         if (reader.HasRows && reader.ReadAsync().Result)
         {
+            equipment.Id = (int)reader.GetValue(0);
             equipment.Name = reader.GetValue(1).ToString();
             equipment.Description = reader.GetValue(2).ToString();
             equipment.TypeEquipmentId = (int)reader.GetValue(3);
@@ -201,6 +203,7 @@ public class DataSqlService
                 categoryWorks.Add(
                     new CategoryWork
                     {
+                        Id = (int) reader.GetValue(0),
                         Name = reader.GetValue(1).ToString(),
                         ServiceId = (int)reader.GetValue(2)
                     }
@@ -232,7 +235,60 @@ public class DataSqlService
                 );
             }
         }
-        
+
         return typeEquipments.ToArray();
+    }
+
+    public async Task<Work[]> GetWorks()
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand("select * from Jobs", connection);
+        var works = new List<Work>();
+        await using var reader = await command.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            while (reader.ReadAsync().Result)
+            {
+                works.Add(
+                    new Work
+                    {
+                        Id = (int)reader.GetValue(0),
+                        Name = reader.GetValue(1).ToString(),
+                        Description = reader.GetValue(2).ToString(),
+                        CategoryWorkId = (int) reader.GetValue(3)
+                    }
+                );
+            }
+        }
+
+        return works.ToArray();
+    }
+    public async Task<Equipment[]> GetEquipments()
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand("select * from Jobs", connection);
+        var equipments = new List<Equipment>();
+        await using var reader = await command.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            while (reader.ReadAsync().Result)
+            {
+                equipments.Add(
+                    new Equipment
+                    {
+                        Id = (int)reader.GetValue(0),
+                        Name = reader.GetValue(1).ToString(),
+                        Description = reader.GetValue(2).ToString(),
+                        TypeEquipmentId = (int) reader.GetValue(3)
+                    }
+                );
+            }
+        }
+
+        return equipments.ToArray();
     }
 }

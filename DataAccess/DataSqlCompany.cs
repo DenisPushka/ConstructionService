@@ -1,4 +1,5 @@
 ﻿using System.Data.SqlClient;
+using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
 using SqlCommand = System.Data.SqlClient.SqlCommand;
@@ -11,14 +12,14 @@ public class DataSqlCompany
         "Server=DenisBaranovski;Database=ConstructionService;Trusted_Connection=True;TrustServerCertificate=Yes;";
 
     // TODO прописать для получения id для добавления работы или сервиса
-    public async Task<Company> Get(Company company)
+    public async Task<Company> Get(UserAuthentication company)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
         var command =
             new SqlCommand(
-                $"SELECT * FROM Company WHERE Email = \'{company.Email}\' and Password = \'{company.Password}\'",
+                $"SELECT * FROM Company WHERE Email = \'{company.Login}\' and Password = \'{company.Password}\'",
                 connection);
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -31,12 +32,13 @@ public class DataSqlCompany
             companyGet.Email = reader.GetValue(3).ToString();
             companyGet.Password = reader.GetValue(4).ToString();
             companyGet.Rating = (int)reader.GetValue(5);
+            companyGet.SubscriptionId = (int)reader.GetValue(6);
         }
 
         return companyGet;
     }
 
-    /// НЕ НАПИСАНО
+    //todo НЕ НАПИСАНО
     public async Task<Company[]> GetAllCompany()
     {
         return new[] { new Company() };
@@ -48,7 +50,7 @@ public class DataSqlCompany
         await connection.OpenAsync();
 
         var command = new SqlCommand(
-            "SELECT name, description, email, password, ratingId, phone, link, CityName, Street, Home" +
+            "SELECT name, description, email, password, ratingId, phone, link, CityName, Street, Home, SubscriptionId" +
             " FROM Company INNER JOIN ContactCompany ON Company.CompanyId = ContactCompany.CompanyId " +
             " INNER JOIN Addresses ON ContactCompany.ContactCompanyId = Addresses.ContactCompanyId " +
             " INNER JOIN Cities ON Addresses.CityId = Cities.CityId" +
@@ -68,12 +70,13 @@ public class DataSqlCompany
             companyGet.CityName = reader.GetValue(7).ToString();
             companyGet.Street = reader.GetValue(8).ToString();
             companyGet.Home = reader.GetValue(9).ToString();
+            companyGet.SubscriptionId = (int)reader.GetValue(10); // не протестил
         }
 
         return companyGet;
     }
 
-    /// НЕ НАПИСАНО!
+    //todo НЕ НАПИСАНО!
     public async Task<Company[]> GetCompanyFromCity(string city)
     {
         return new[] { new Company() };
@@ -126,7 +129,7 @@ public class DataSqlCompany
         await connection.OpenAsync();
         var commandAddTableCompany =
             new SqlCommand($"INSERT INTO Company VALUES ('{company.Name}', '{company.Description}'," +
-                           $" '{company.Email}', '{company.Password}', {company.Rating})" +
+                           $" '{company.Email}', '{company.Password}', {company.Rating}, {company.SubscriptionId})" +
                            "select max(CompanyId) from Company", connection);
         await using var reader = await commandAddTableCompany.ExecuteReaderAsync();
         if (reader.HasRows && reader.ReadAsync().Result)
@@ -155,18 +158,19 @@ public class DataSqlCompany
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        // TODO возможно разбить
         var command = new SqlCommand("USE [ConstructionService] " +
                                      "GO UPDATE [dbo].[Company] SET " +
                                      $"[Name] = \'{company.Name}\'," +
                                      $"[Description] = \'{company.Description}\'," +
                                      $"[Password] = \'{company.Password}\'," +
-                                     $"[RatingId] = \'{company.Rating}\'" +
-                                     $"WHERE Email = {company.Email}" + // todo добавить ли парль?
+                                     $"[RatingId] = {company.Rating}" +
+                                     $"[SubscriptionId] = {company.SubscriptionId}" +
+                                     $"WHERE Email = {company.Email}" +
                                      "GO", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
-        return await Get(company);
+        var userA = new UserAuthentication { Login = company.Email, Password = company.Password};
+        return await Get(userA);
     }
 
     public async Task<Company> UpdateRating(Company company)
@@ -180,7 +184,8 @@ public class DataSqlCompany
             "GO", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
-        return await Get(company);
+        var userA = new UserAuthentication { Login = company.Email, Password = company.Password};
+        return await Get(userA);
     }
 
     public async Task TakeOrder(Company company, int orderId)

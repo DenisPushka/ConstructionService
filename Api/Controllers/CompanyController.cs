@@ -1,4 +1,6 @@
-﻿using DataAccess.Interface;
+﻿using Api.Models;
+using DataAccess.Interface;
+using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Service;
 using Domain.Models.Users;
@@ -19,9 +21,9 @@ public class CompanyController : ControllerBase
     }
 
     [HttpPost("GetCompany")]
-    public async Task<Company> GetCompany(Company company)
+    public async Task<Company> GetCompany([FromForm] UserAuthentication user)
     {
-        return await _companyRepository.GetCompany(company);
+        return await _companyRepository.GetCompany(user);
     }
 
     [HttpPost("GetAll")]
@@ -47,28 +49,28 @@ public class CompanyController : ControllerBase
     {
         return await _companyRepository.GetFeedbacks(company);
     }
-    
+
     // ДОБАВЛЕНИЕ
     [HttpPost("AddCompany")]
-    public async Task<Company> AddCompany(Company company)
+    public async Task<Company> AddCompany([FromForm] Company company)
     {
         return await _companyRepository.AddCompany(company);
     }
-    
-    [HttpPost("addWork/\'{login}\' \'{password}\'")]
-    public async Task<Work> AddWork([FromRoute]string login, [FromRoute] string password, Work work)
+
+    [HttpPost("addWork")]
+    public async Task<Work> AddWork([FromForm] AddWorkCompany addWorkCompany)
     {
-        var company = await _companyRepository.GetCompany(new Company { Email = login, Password = password });
-        return await _serviceRepository.AddWork(work, company.Id, 0);
+        var company = await _companyRepository.GetCompany(addWorkCompany.UserAuthentication);
+        return await _serviceRepository.AddWork(addWorkCompany.Work, company.Id, 0);
     }
-    
-    [HttpPost("addEquipment/\'{login}\' \'{password}\'")]
-    public async Task<Equipment> AddEquipment([FromRoute]string login, [FromRoute] string password,Equipment equipment)
+
+    [HttpPost("addEquipment")]
+    public async Task<Equipment> AddEquipment([FromForm] AddEquipmentCompany addEquipmentCompany)
     {
-        var company = await _companyRepository.GetCompany(new Company { Email = login, Password = password });
-        return await _serviceRepository.AddEquipment(equipment, company.Id, 0);
+        var company = await _companyRepository.GetCompany(addEquipmentCompany.UserAuthentication);
+        return await _serviceRepository.AddEquipment(addEquipmentCompany.Equipment, company.Id, 0);
     }
-    
+
     [HttpPost("UpdateCompany")]
     public async Task<Company> UpdateInfo(Company company)
     {
@@ -90,9 +92,9 @@ public class CompanyController : ControllerBase
 
     // TODO попробовать прокинуть запрос
     [HttpDelete("RemoveOrder/{orderId:int}")]
-    public async Task RemoveOrder([FromRoute] int orderId, Company company )
+    public async Task RemoveOrder([FromRoute] int orderId, UserAuthentication userAuthentication)
     {
-        var companyWithId = await _companyRepository.GetCompany(company);
+        var companyWithId = await _companyRepository.GetCompany(userAuthentication);
         await _companyRepository.RemoveOrder(orderId, companyWithId.Id, 0);
     }
 }
