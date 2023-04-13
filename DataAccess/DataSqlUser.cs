@@ -10,7 +10,8 @@ public class DataSqlUser
     private const string ConnectionString =
         "Server=DenisBaranovski;Database=ConstructionService;Trusted_Connection=True;TrustServerCertificate=Yes;";
 
-    // Добавление
+    #region Add
+
     public async Task<User> Add(User user)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -74,6 +75,11 @@ public class DataSqlUser
 
         await using var reader = await command.ExecuteReaderAsync();
     }
+    
+
+    #endregion
+
+    #region Update
 
     public async Task<User> Update(User user)
     {
@@ -121,8 +127,12 @@ public class DataSqlUser
         await using var reader = await command.ExecuteReaderAsync();
         return await GetOrder(order.Id);
     }
+    
 
-    // Получение 
+    #endregion
+
+    #region Get
+
     public async Task<User> Get(UserAuthentication user)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -361,4 +371,6 @@ public class DataSqlUser
 
         return orders.ToArray();
     }
+
+    #endregion
 }

@@ -88,3 +88,5 @@ C:\Users\User\RiderProjects\ConstructionService\ConstructionService\bin\Debug\ne
 C:\Users\User\RiderProjects\ConstructionService\ConstructionService\bin\Debug\net7.0\Front\construction-service\package.json
 C:\Users\User\RiderProjects\ConstructionService\ConstructionService\bin\Debug\net7.0\Front\construction-service\public\manifest.json
 C:\Users\User\RiderProjects\ConstructionService\ConstructionService\bin\Debug\net7.0\runtimes\win\lib\net7.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\User\RiderProjects\ConstructionService\ConstructionService\bin\Debug\net7.0\JsonConverter.Abstractions.dll
+C:\Users\User\RiderProjects\ConstructionService\ConstructionService\bin\Debug\net7.0\Newtonsoft.Json.dll

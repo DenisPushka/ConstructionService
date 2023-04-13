@@ -20,10 +20,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="JsonConverter.Abstractions" Version="0.4.0" />
       <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
 </Project>

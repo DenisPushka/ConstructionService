@@ -20,6 +20,7 @@ public class Startup
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<ICompanyRepository, CompanyRepository>();
         services.AddTransient<ICityRepository, CityRepository>();
+        services.AddTransient<ISubscriptionRepository, SubscriptionRepository>();
         services.AddTransient<IServiceRepository, ServiceRepository>();
         services.AddTransient<IAuthenticationRepository, AuthenticationRepository>();
         services.AddMvcCore();

@@ -6,7 +6,7 @@ public class Company
     public string? Name { get; set; } = string.Empty;
     public string? Description { get; set; } = string.Empty;
     public int Rating { get; set; }
-    public int SubscriptionId { get; set; }
+    public string? Subscription { get; set; }
 
     // Контакт компании
     public int ContactCompanyId { get; set; }

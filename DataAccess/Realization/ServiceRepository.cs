@@ -1,5 +1,6 @@
 ﻿using DataAccess.Interface;
 using Domain.Models.Service;
+using Domain.Models.Users;
 
 namespace DataAccess.Realization;
 
@@ -22,9 +23,9 @@ public class ServiceRepository : IServiceRepository
         return await _service.AddCategoryWork(categoryWork);
     }
 
-    public async Task<Work> AddWork(Work work, int idWork, int idHandcraft)
+    public async Task<Work> AddWork(Work work, Company company, Handcraft handcraft)
     {
-        return await _service.AddWork(work, idWork, idHandcraft);
+        return await _service.AddWork(work, company, handcraft);
     }
 
     public async Task<TypeEquipment[]> AddTypeEquipment(TypeEquipment equipment)
@@ -32,9 +33,9 @@ public class ServiceRepository : IServiceRepository
         return await _service.AddTypeEquipment(equipment);
     }
 
-    public async Task<Equipment> AddEquipment(Equipment equipment, int idWork, int idHandcraft)
+    public async Task<Equipment> AddEquipment(Equipment equipment,Company company, Handcraft handcraft)
     {
-        return await _service.AddEquipment(equipment, idWork, idHandcraft);
+        return await _service.AddEquipment(equipment, company, handcraft);
     }
 
     public async Task<Work> UpdateWork(Work work)

@@ -1,6 +1,6 @@
 ﻿namespace Domain.Models.Users;
 
-public abstract class Handcraft
+public class Handcraft
 {
     public int Id { get; set; }
     public string Description { get; set; } = string.Empty;

@@ -11,7 +11,8 @@ public class DataSqlCompany
     private const string ConnectionString =
         "Server=DenisBaranovski;Database=ConstructionService;Trusted_Connection=True;TrustServerCertificate=Yes;";
 
-    // TODO прописать для получения id для добавления работы или сервиса
+    #region Get
+
     public async Task<Company> Get(UserAuthentication company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -19,20 +20,20 @@ public class DataSqlCompany
 
         var command =
             new SqlCommand(
-                $"SELECT * FROM Company WHERE Email = \'{company.Login}\' and Password = \'{company.Password}\'",
+                "SELECT Name, Company.Description, Email, Password, RatingId, S.Description FROM Company left outer join Subscriptions S on Company.SubscriptionId = S.SubscriptionId" +
+                $" WHERE Email = \'{company.Login}\' and Password = \'{company.Password}\'",
                 connection);
 
         await using var reader = await command.ExecuteReaderAsync();
         var companyGet = new Company();
         if (reader.HasRows && reader.ReadAsync().Result)
         {
-            companyGet.Id = (int)reader.GetValue(0);
-            companyGet.Name = reader.GetValue(1).ToString();
-            companyGet.Description = reader.GetValue(2).ToString();
-            companyGet.Email = reader.GetValue(3).ToString();
-            companyGet.Password = reader.GetValue(4).ToString();
-            companyGet.Rating = (int)reader.GetValue(5);
-            companyGet.SubscriptionId = (int)reader.GetValue(6);
+            companyGet.Name = reader.GetValue(0).ToString();
+            companyGet.Description = reader.GetValue(1).ToString();
+            companyGet.Email = reader.GetValue(2).ToString();
+            companyGet.Password = reader.GetValue(3).ToString();
+            companyGet.Rating = (int)reader.GetValue(4);
+            companyGet.Subscription = reader.GetValue(5).ToString();
         }
 
         return companyGet;
@@ -50,10 +51,11 @@ public class DataSqlCompany
         await connection.OpenAsync();
 
         var command = new SqlCommand(
-            "SELECT name, description, email, password, ratingId, phone, link, CityName, Street, Home, SubscriptionId" +
+            "SELECT name, Company.description, email, password, ratingId, phone, link, CityName, Street, Home, S.Description" +
             " FROM Company INNER JOIN ContactCompany ON Company.CompanyId = ContactCompany.CompanyId " +
-            " INNER JOIN Addresses ON ContactCompany.ContactCompanyId = Addresses.ContactCompanyId " +
-            " INNER JOIN Cities ON Addresses.CityId = Cities.CityId" +
+            " left join Addresses ON ContactCompany.ContactCompanyId = Addresses.ContactCompanyId " +
+            " left join Cities ON Addresses.CityId = Cities.CityId" +
+            " left join Subscriptions S on Company.SubscriptionId = S.SubscriptionId" +
             $" WHERE Email = \'{company.Email}\' AND Password = \'{company.Password}\'", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -70,7 +72,7 @@ public class DataSqlCompany
             companyGet.CityName = reader.GetValue(7).ToString();
             companyGet.Street = reader.GetValue(8).ToString();
             companyGet.Home = reader.GetValue(9).ToString();
-            companyGet.SubscriptionId = (int)reader.GetValue(10); // не протестил
+            companyGet.Subscription = reader.GetValue(10).ToString(); // не протестил
         }
 
         return companyGet;
@@ -100,58 +102,57 @@ public class DataSqlCompany
             {
                 var userId = (int)reader.GetValue(0);
                 var description = reader.GetValue(1).ToString();
-                feedbacks.Add(new Feedback {UserId = userId, Description = description});
+                feedbacks.Add(new Feedback { UserId = userId, Description = description });
             }
         }
 
         return feedbacks.ToArray();
     }
-    
-    // ДОБАВЛЕНИЕ
+
+    #endregion
+
+    // todo объединить в один большой запрос
     public async Task<Company> Add(Company company)
     {
-        // Проверка пользователя в системе
         await using var connection = new SqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        var commandCheck =
-            new SqlCommand($"SELECT COUNT(*) FROM Company where Email = '{company.Email}'", connection);
-        await using var reader0 = await commandCheck.ExecuteReaderAsync();
-        if (reader0.HasRows && reader0.ReadAsync().Result)
+        try
         {
-            var a = (int)reader0.GetValue(0);
-            if (a != 0)
-                return new Company();
+            // Добавление в табл компания
+            await connection.OpenAsync();
+            var commandAddTableCompany =
+                new SqlCommand($"INSERT INTO Company VALUES (\'{company.Name}\', \'{company.Description}\'," +
+                               $" \'{company.Email}\', \'{company.Password}\', {company.Rating}, " +
+                               $"(select (SubscriptionId) from Subscriptions S where S.Description = \'{company.Description}\'))" +
+                               "select max(CompanyId) from Company", connection);
+            await using var reader = await commandAddTableCompany.ExecuteReaderAsync();
+            if (reader.HasRows && reader.ReadAsync().Result)
+                company.Id = (int)reader.GetValue(0);
+            await connection.CloseAsync();
+
+            // Добавление в табл Контакт компании
+            await connection.OpenAsync();
+            var commandAddTableCompanyContact =
+                new SqlCommand($"INSERT INTO ContactCompany VALUES ('{company.Phone}', '{company.Link}'," +
+                               $" '{company.Id}')", connection);
+            await using var reader2 = await commandAddTableCompanyContact.ExecuteReaderAsync();
+            await connection.CloseAsync();
+            await connection.OpenAsync();
+            var commandAddTableAddresses =
+                new SqlCommand(
+                    $"INSERT INTO Addresses VALUES ((select CityId FROM Cities WHERE CityName = \'{company.CityName}\'), " +
+                    $" '{company.Street}', '{company.Home}', {company.ContactCompanyId})",
+                    connection);
+            await using var reader3 = await commandAddTableAddresses.ExecuteReaderAsync();
+            return await GetAllInfoAboutCompany(company);
         }
-
-        await connection.CloseAsync();
-
-        // Добавление в табл компания
-        await connection.OpenAsync();
-        var commandAddTableCompany =
-            new SqlCommand($"INSERT INTO Company VALUES ('{company.Name}', '{company.Description}'," +
-                           $" '{company.Email}', '{company.Password}', {company.Rating}, {company.SubscriptionId})" +
-                           "select max(CompanyId) from Company", connection);
-        await using var reader = await commandAddTableCompany.ExecuteReaderAsync();
-        if (reader.HasRows && reader.ReadAsync().Result)
-            company.Id = (int)reader.GetValue(0);
-        await connection.CloseAsync();
-
-        // Добавление в табл Контакт компании
-        await connection.OpenAsync();
-        var commandAddTableCompanyContact =
-            new SqlCommand($"INSERT INTO ContactCompany VALUES ('{company.Phone}', '{company.Link}'," +
-                           $" '{company.Id}')", connection);
-        await using var reader2 = await commandAddTableCompanyContact.ExecuteReaderAsync();
-        await connection.CloseAsync();
-        await connection.OpenAsync();
-        var commandAddTableAddresses =
-            new SqlCommand(
-                $"INSERT INTO Addresses VALUES ((select CityId FROM Cities WHERE CityName = \'{company.CityName}\'), " +
-                $" '{company.Street}', '{company.Home}', {company.ContactCompanyId})",
-                connection);
-        await using var reader3 = await commandAddTableAddresses.ExecuteReaderAsync();
-        return await GetAllInfoAboutCompany(company);
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new Company();
+        }
     }
+
+    #region Update
 
     public async Task<Company> UpdateInfoCompany(Company company)
     {
@@ -164,12 +165,12 @@ public class DataSqlCompany
                                      $"[Description] = \'{company.Description}\'," +
                                      $"[Password] = \'{company.Password}\'," +
                                      $"[RatingId] = {company.Rating}" +
-                                     $"[SubscriptionId] = {company.SubscriptionId}" +
+                                     $"[SubscriptionId] = {company.Subscription}" +
                                      $"WHERE Email = {company.Email}" +
                                      "GO", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
-        var userA = new UserAuthentication { Login = company.Email, Password = company.Password};
+        var userA = new UserAuthentication { Login = company.Email, Password = company.Password };
         return await Get(userA);
     }
 
@@ -184,24 +185,61 @@ public class DataSqlCompany
             "GO", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
-        var userA = new UserAuthentication { Login = company.Email, Password = company.Password};
+        var userA = new UserAuthentication { Login = company.Email, Password = company.Password };
         return await Get(userA);
     }
 
-    public async Task TakeOrder(Company company, int orderId)
+    public async Task<Company> UpdateSubscription(Company company)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        var command = new SqlCommand(
+            "UPDATE Company SET" +
+            $"[SubscriptionId] = (select (SubscriptionId) from Subscriptions where Description = \'{company.Subscription}\')" +
+            $"WHERE Email = \'{company.Email}\'" +
+            "GO", connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        var userA = new UserAuthentication { Login = company.Email, Password = company.Password };
+        return await Get(userA);
+    }
+
+    #endregion
+
+    public async Task TakeOrder(UserAuthentication company, int orderId)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
         var command = new SqlCommand(
             "UPDATE Orders SET " +
-            $"CompanyId = (SELECT CompanyId FROM Company WHERE Email = '{company.Email}')," +
+            $"CompanyId = (SELECT CompanyId FROM Company WHERE Email = \'{company.Login}\')," +
             "GetOrder = 1" +
-            $"WHERE OrderId = {orderId}",
+            $"WHERE OrderId = {orderId} " +
+            "update Company set " +
+            "NumberOfOrdersInProgress = NumberOfOrdersInProgress + 1 " +
+            $"where Email = \'{company.Login}\'",
             connection);
 
         await using var reader = await command.ExecuteReaderAsync();
     }
 
+    public async Task CompletedOrder(UserAuthentication company, int orderId)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        var command = new SqlCommand(
+            "UPDATE Orders SET " +
+            "CompletedOrder = 1" +
+            $"WHERE OrderId = {orderId} " +
+            $"update Company set " +
+            "NumberOfOrdersInProgress = NumberOfOrdersInProgress - 1 " +
+            $"where Email = \'{company.Login}\'",
+            connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
+    }
+
+    // todo remake
     public async Task RemoveOrder(int orderId, int companyId, int handcraftId)
     {
         await using var connection = new SqlConnection(ConnectionString);

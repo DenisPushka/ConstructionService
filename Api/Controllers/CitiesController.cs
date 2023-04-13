@@ -23,10 +23,4 @@ public class CitiesController : ControllerBase
     {
         return await _cityRepository.GetAllCity();
     }
-    // [HttpGet("{id}", Name = "GetCity")]
-    // public ActionResult<Cities> Get(int id)
-    // {
-    //     var city = _cityRepository.Get(id);
-    //     return new ObjectResult(city);
-    // }
 }

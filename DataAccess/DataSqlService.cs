@@ -1,7 +1,7 @@
-﻿using System.Data;
-using System.Data.SqlClient;
-using Domain.Models;
+﻿using System.Data.SqlClient;
+using DataAccess.models;
 using Domain.Models.Service;
+using Domain.Models.Users;
 
 namespace DataAccess;
 
@@ -9,6 +9,8 @@ public class DataSqlService
 {
     private const string ConnectionString =
         "Server=DenisBaranovski;Database=ConstructionService;Trusted_Connection=True;TrustServerCertificate=Yes;";
+
+    #region Add
 
     public async Task<Service[]> AddService(Service service)
     {
@@ -34,24 +36,32 @@ public class DataSqlService
         return await GetCategoriesWork();
     }
 
-    public async Task<Work> AddWork(Work work, int companyId, int handcraftId)
+    public async Task<Work> AddWork(Work work, Company company, Handcraft handcraft)
     {
         await using var connection = new SqlConnection(ConnectionString);
-        await connection.OpenAsync();
+        try
+        {
+            await connection.OpenAsync();
+            var command = new SqlCommand($"INSERT INTO Jobs VALUES (\'{work.Name}\'," +
+                                         $" \'{work.Description}\', \'{work.CategoryWorkId}\')", connection);
+            await using var reader = await command.ExecuteReaderAsync();
+            await connection.CloseAsync();
 
-        var command = new SqlCommand($"INSERT INTO Jobs VALUES (\'{work.Name}\'," +
-                                     $" \'{work.Description}\', \'{work.CategoryWorkId}\')", connection);
-        await using var reader = await command.ExecuteReaderAsync();
-        await connection.CloseAsync();
-
-        await connection.OpenAsync();
-        // создание связи многие ко многим
-        command = new SqlCommand($"INSERT INTO JobsSubject VALUES ({companyId}, +" +
-                                 $" {handcraftId}, (select Max(JobId) from Jobs))", connection);
-        await using var reader1 = await command.ExecuteReaderAsync();
-        await connection.CloseAsync();
-
-        return await GetWork(work.Name);
+            await connection.OpenAsync();
+            // создание связи многие ко многим
+            command = new SqlCommand(
+                $"INSERT INTO JobsSubject VALUES ((select CompanyId from Company where Email = \'{company.Email}\'), +" +
+                // todo при имзменение таблицы ремесленников, изменить тут строку 
+                // $" (select HandCraftId from Handcrafts), (select Max(JobId) from Jobs))", connection);
+                $" 0, (select Max(JobId) from Jobs))", connection);
+            await using var reader1 = await command.ExecuteReaderAsync();
+            await connection.CloseAsync();
+            return await GetWork(work.Name);
+        }
+        catch (Exception e)
+        {
+            return new Work();
+        }
     }
 
     public async Task<TypeEquipment[]> AddTypeEquipment(TypeEquipment type)
@@ -66,7 +76,9 @@ public class DataSqlService
         return await GetTypeEquipments();
     }
 
-    public async Task<Equipment> AddEquipment(Equipment equipment, int companyId, int handcraftId)
+
+    // todo переделать
+    public async Task<Equipment> AddEquipment(Equipment equipment, Company company, Handcraft handcraft)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
@@ -83,15 +95,20 @@ public class DataSqlService
 
         await connection.OpenAsync();
         // создание связи многие ко многим
-        command = new SqlCommand($"INSERT INTO EquipmentsSubject VALUES ({companyId}, +" +
-                                 $" {handcraftId}, (select Max(EquipmentId) from Equipments))", connection);
+        command = new SqlCommand(
+            $"INSERT INTO EquipmentSubject VALUES ((select CompanyId from Company where Email = \'{company.Email}\'), +" +
+            // $" (select HandCraftId from Handcrafts), (select Max(JobId) from Jobs))", connection);
+            " 0, (select Max(JobId) from Jobs))", connection);
         await using var reader1 = await command.ExecuteReaderAsync();
         await connection.CloseAsync();
 
         return await GetEquipment(id);
     }
 
-    // Обноление
+    #endregion
+
+    #region Update
+
     public async Task<Work> UpdateInfoAboutWork(Work work)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -124,13 +141,16 @@ public class DataSqlService
         return await GetEquipment(equipment.Id);
     }
 
-    // Получение
+    #endregion
+
+    #region Get
+
     public async Task<Work> GetWork(string? name)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var command = new SqlCommand($"select * from Jobs where Name = \'{name}\' ", connection);
+        var command = new SqlCommand($"select * from Jobs where NameJob = \'{name}\' ", connection);
         var getWork = new Work();
         await using var reader = await command.ExecuteReaderAsync();
         if (reader.HasRows && reader.ReadAsync().Result)
@@ -142,6 +162,35 @@ public class DataSqlService
         }
 
         return getWork;
+    }
+
+    public async Task<Work[]> GetWorksCompany(UserAuthentication company)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand("select J.NameJob, J.Description " +
+                                     "from Company " +
+                                     "left join JobsSubject JS on Company.CompanyId = JS.CompanyId " +
+                                     "left join Jobs J on JS.JobId = J.JobId " +
+                                     $"where Email = \'{company.Login}\' and Password = \'{company.Password}\'",
+            connection);
+        var works = new List<Work>();
+        await using var reader = await command.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            while (reader.ReadAsync().Result)
+            {
+                var work = new Work
+                {
+                    Name = reader.GetValue(0).ToString(),
+                    Description = reader.GetValue(1).ToString()
+                };
+                works.Add(work);
+            }
+        }
+
+        return works.ToArray();
     }
 
     public async Task<Equipment> GetEquipment(int equipmentId)
@@ -161,6 +210,34 @@ public class DataSqlService
         }
 
         return equipment;
+    }
+
+    public async Task<Equipment[]> GetEquipmentsCompany(UserAuthentication company)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand("select E.Name, E.Description from Company " +
+                                     "left join EquipmentsSubject ES on Company.CompanyId = ES.CompanyId " +
+                                     "left join Equipments E on ES.EquipmentId = E.EquipmentId " +
+                                     $"where Email = \'{company.Login}\' and password \'{company.Password}\'",
+            connection);
+        var equipments = new List<Equipment>();
+        await using var reader = await command.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            while (reader.ReadAsync().Result)
+            {
+                var equipment = new Equipment
+                {
+                    Name = reader.GetValue(0).ToString(),
+                    Description = reader.GetValue(1).ToString()
+                };
+                equipments.Add(equipment);
+            }
+        }
+
+        return equipments.ToArray();
     }
 
     public async Task<Service[]> GetServices()
@@ -203,7 +280,7 @@ public class DataSqlService
                 categoryWorks.Add(
                     new CategoryWork
                     {
-                        Id = (int) reader.GetValue(0),
+                        Id = (int)reader.GetValue(0),
                         Name = reader.GetValue(1).ToString(),
                         ServiceId = (int)reader.GetValue(2)
                     }
@@ -257,7 +334,7 @@ public class DataSqlService
                         Id = (int)reader.GetValue(0),
                         Name = reader.GetValue(1).ToString(),
                         Description = reader.GetValue(2).ToString(),
-                        CategoryWorkId = (int) reader.GetValue(3)
+                        CategoryWorkId = (int)reader.GetValue(3)
                     }
                 );
             }
@@ -265,6 +342,7 @@ public class DataSqlService
 
         return works.ToArray();
     }
+
     public async Task<Equipment[]> GetEquipments()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -283,12 +361,56 @@ public class DataSqlService
                         Id = (int)reader.GetValue(0),
                         Name = reader.GetValue(1).ToString(),
                         Description = reader.GetValue(2).ToString(),
-                        TypeEquipmentId = (int) reader.GetValue(3)
+                        TypeEquipmentId = (int)reader.GetValue(3)
                     }
                 );
             }
         }
 
         return equipments.ToArray();
+    }
+
+    #endregion
+
+    public async Task TakeWork(Work work, Company company, Handcraft handcraft)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        try
+        {
+            await connection.OpenAsync();
+            // создание связи многие ко многим
+            var command = new SqlCommand(
+                $"INSERT INTO JobsSubject VALUES ((select CompanyId from Company where Email = \'{company.Email}\'), +" +
+                // todo при имзменение таблицы ремесленников, изменить тут строку 
+                // $" (select HandCraftId from Handcrafts), (select Max(JobId) from Jobs))", connection);
+                $" 0, (select JobId from Jobs where NameJob = \'{work.Name}\'))", connection);
+            await using var reader1 = await command.ExecuteReaderAsync();
+            await connection.CloseAsync();
+        }
+        catch (Exception e)
+        {
+            throw new Exception();
+        }
+    }
+
+    public async Task TakeEquipment(Equipment equipment, Company company, Handcraft handcraft)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        try
+        {
+            await connection.OpenAsync();
+            // создание связи многие ко многим
+            var command = new SqlCommand(
+                $"INSERT INTO EquipmentsSubject VALUES ((select CompanyId from Company where Email = \'{company.Email}\'), +" +
+                // todo при имзменение таблицы ремесленников, изменить тут строку 
+                // $" (select HandCraftId from Handcrafts), (select Max(JobId) from Jobs))", connection);
+                $" 0, (select EquipmentId from Equipments where Name = \'{equipment.Name}\'))", connection);
+            await using var reader1 = await command.ExecuteReaderAsync();
+            await connection.CloseAsync();
+        }
+        catch (Exception e)
+        {
+            throw new Exception();
+        }
     }
 }

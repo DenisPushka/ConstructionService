@@ -1,4 +1,5 @@
 ﻿using Domain.Models.Service;
+using Domain.Models.Users;
 
 namespace DataAccess.Interface;
 
@@ -7,9 +8,9 @@ public interface IServiceRepository
     // Добавление
     Task<Service[]> AddService(Service service);
     Task<CategoryWork[]> AddCategoryWork(CategoryWork categoryWork);
-    Task<Work> AddWork(Work work, int idWork, int idHandcraft);
+    Task<Work> AddWork(Work work, Company company, Handcraft handcraft);
     Task<TypeEquipment[]> AddTypeEquipment(TypeEquipment equipment);
-    Task<Equipment> AddEquipment(Equipment equipment, int idWork, int idHandcraft);
+    Task<Equipment> AddEquipment(Equipment equipment, Company company, Handcraft handcraft);
     
     // Обновление
     Task<Work> UpdateWork(Work work);

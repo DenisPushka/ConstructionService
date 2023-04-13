@@ -26,7 +26,7 @@ public class DataSql
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var command = new SqlCommand($"select * from Cities", connection);
+        var command = new SqlCommand("select * from Cities", connection);
         var listCity = new List<City>();
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -68,5 +68,28 @@ public class DataSql
         // если есть в компании c
         // если пользоваетль то u
         // если 'h'
+    }
+
+    public async Task<Subscription[]> GetSubscriptions()
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand("select * from Subscriptions", connection);
+        var subscriptions = new List<Subscription>();
+
+        await using var reader = await command.ExecuteReaderAsync();
+        if (reader.HasRows)
+        {
+            while (reader.ReadAsync().Result)
+            {
+                var id = (int)reader.GetValue(0);
+                var description = reader.GetValue(1).ToString();
+                var price = (int)reader.GetValue(2);
+                subscriptions.Add(new Subscription {Id = id, Description = description, Price = price});
+            }
+        }
+
+        return subscriptions.ToArray();
     }
 }
