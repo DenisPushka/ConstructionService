@@ -51,9 +51,9 @@ public class UserRepository : IUserRepository
         return await _context.Add(user);
     }
 
-    public async Task<Order> AddOrder(Order order)
+    public async Task<Order> AddOrder(Order order, UserAuthentication user)
     {
-        return await _context.AddOrder(order);
+        return await _context.AddOrder(order, user);
     }
 
     public async Task AddFeedbackToEmployer(Feedback feedback)

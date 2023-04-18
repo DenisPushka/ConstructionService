@@ -17,7 +17,7 @@ public class UserFromFront
     public string? Patronymic { get; set; } = string.Empty;
     public string? DateOfBrith { get; set; } = string.Empty;
     public string? Phone { get; set; } = string.Empty;
-    public int CityId { get; set; }
+    public string? CityName { get; set; } = string.Empty;
     public IFormFile? Image { get; set; }
     public string? Email { get; set; } = string.Empty;
     public string? Password { get; set; } = string.Empty;
@@ -29,14 +29,11 @@ public class UserFromFront
         var user = new User
         {
             Id = Id, CountMadeOrders = CountMadeOrders, LastName = LastName, Name = Name, 
-            CityId = CityId, Email = Email, Password = Password
+            CityName = CityName, Email = Email, Password = Password
         };
-        if (user.DateOfBrith == null)
-            user.DateOfBrith = "";
-        if (user.Patronymic == null)
-            user.Patronymic = "";
-        if (user.Phone == null)
-            user.Phone = "";
+        user.DateOfBrith ??= "";
+        user.Patronymic ??= "";
+        user.Phone ??= "";
         
         if (Image != null)
         {

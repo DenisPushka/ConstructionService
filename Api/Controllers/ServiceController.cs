@@ -14,35 +14,45 @@ public class ServiceController : ControllerBase
         _service = service;
     }
 
+    #region ADD
+
     [HttpPost("addService")]
-    public async Task<Service[]> AddService(Service service)
+    public async Task<Service[]> AddService([FromForm] Service service)
     {
         return await _service.AddService(service);
     }
 
     [HttpPost("addCW")]
-    public async Task<CategoryWork[]> AddCW(CategoryWork categoryWork)
+    public async Task<CategoryWork[]> AddCW([FromForm] CategoryWork categoryWork)
     {
         return await _service.AddCategoryWork(categoryWork);
     }
 
     [HttpPost("addTE")]
-    public async Task<TypeEquipment[]> AddTE(TypeEquipment type)
+    public async Task<TypeEquipment[]> AddTE([FromForm] TypeEquipment type)
     {
         return await _service.AddTypeEquipment(type);
     }
 
+    #endregion
+
+    #region Update
+
     [HttpPost("updateWork")]
-    public async Task<Work> UpdateWork(Work work)
+    public async Task<Work> UpdateWork([FromForm] Work work)
     {
         return await _service.UpdateWork(work);
     }
 
     [HttpPost("updateEquipment")]
-    public async Task<Equipment> UpdateEquipment(Equipment equipment)
+    public async Task<Equipment> UpdateEquipment([FromForm] Equipment equipment)
     {
         return await _service.UpdateEquipment(equipment);
     }
+
+    #endregion
+
+    #region Get
 
     [HttpGet("getWork/\'{name}\'")]
     public async Task<Work> GetWork([FromRoute] string name)
@@ -97,4 +107,6 @@ public class ServiceController : ControllerBase
     {
         return await _service.SearchEquipmentFromCity(nameCity);
     }
+
+    #endregion
 }

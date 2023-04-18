@@ -8,40 +8,40 @@ namespace DataAccess.Realization;
 
 public class CompanyRepository : ICompanyRepository
 {
-    private readonly DataSqlCompany _sql;
-    private readonly DataSqlFeedBack _feedBack;
+    private readonly DataSqlCompany _sqlCompany;
+    private readonly DataSqlFeedBack _sqlFeedBack;
     private readonly DataSqlService _sqlService;
     
-    public CompanyRepository(DataSqlCompany sql, DataSqlFeedBack feedBack, DataSqlService sqlService)
+    public CompanyRepository(DataSqlCompany sqlCompany, DataSqlFeedBack sqlFeedBack, DataSqlService sqlService)
     {
-        _sql = sql;
-        _feedBack = feedBack;
+        _sqlCompany = sqlCompany;
+        _sqlFeedBack = sqlFeedBack;
         _sqlService = sqlService;
     }
     
     public async Task<Company> GetCompany(UserAuthentication company)
     {
-        return await _sql.Get(company);
+        return await _sqlCompany.Get(company);
     }
 
     public async Task<Company> GetAllInfoCompany(Company company)
     {
-        return await _sql.GetAllInfoAboutCompany(company);
+        return await _sqlCompany.GetAllInfoAboutCompany(company);
     }
 
     public async Task<Company[]> GetAllCompany()
     {
-        return await _sql.GetAllCompany();
+        return await _sqlCompany.GetAllCompany();
     }
 
     public async Task<Company[]> GetCompanyFromCity(string city)
     {
-        return await _sql.GetCompanyFromCity(city);
+        return await _sqlCompany.GetCompanyFromCity(city);
     }
 
     public async Task<Feedback[]> GetFeedbacks(Company company)
     {
-        return await _sql.GetFeedbacks(company);
+        return await _sqlCompany.GetFeedbacks(company);
     }
 
     public async Task<Work[]> GetWorks(UserAuthentication company)
@@ -56,32 +56,37 @@ public class CompanyRepository : ICompanyRepository
 
     public async Task<Company> AddCompany(Company company)
     {
-        return await _sql.Add(company);
+        return await _sqlCompany.Add(company);
     }
 
     public async Task<Company> UpdateInfoCompany(Company company)
     {
-        return await _sql.UpdateInfoCompany(company);
+        return await _sqlCompany.UpdateInfoCompany(company);
     }
 
     public async Task<Company> UpdateRating(Company company)
     {
-        return await _sql.UpdateRating(company);
+        return await _sqlCompany.UpdateRating(company);
+    }
+
+    public async Task<Company> UpdateSubscription(Company company)
+    {
+        return await _sqlCompany.UpdateSubscription(company);
     }
 
     public async Task TakeOrder(UserAuthentication company, int orderId)
     {
-        await _sql.TakeOrder(company, orderId);
+        await _sqlCompany.TakeOrder(company, orderId);
     }
 
-    public async Task RemoveOrder(int orderId, int companyId, int handcraftId)
+    public async Task RemoveOrder(int orderId)
     {
-        await _sql.RemoveOrder(orderId, companyId, handcraftId);
+        await _sqlCompany.RemoveOrder(orderId);
     }
 
     public async Task<bool> PushMailToCustomer(Feedback feedback)
     {
-        return await _feedBack.SentToUser(feedback);
+        return await _sqlFeedBack.SentToUser(feedback);
     }
 
     public async Task TakeWork(Work work, Company company, Handcraft handcraft)

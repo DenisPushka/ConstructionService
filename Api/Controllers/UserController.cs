@@ -3,7 +3,9 @@ using DataAccess.Interface;
 using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Api.Controllers;
 
@@ -14,12 +16,14 @@ public class UserController : ControllerBase
 
     public UserController(IUserRepository userRepository) => _userRepository = userRepository;
 
+    #region Get
+
     [HttpPost("GetUser")]
-    public async Task<User> GetCustomer(UserAuthentication userAuthentication)
+    public async Task<User> GetCustomer([FromForm] UserAuthentication userAuthentication)
     {
         return await _userRepository.GetUser(userAuthentication);
     }
-    
+
     [HttpGet("GetUsers")]
     public async Task<User[]> GetUsers() => await _userRepository.GetUsers();
 
@@ -30,7 +34,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("GetOrder/{orderId:int}")]
-    public async Task<Order> GetOrder([FromRoute]int orderId)
+    public async Task<Order> GetOrder([FromRoute] int orderId)
     {
         return await _userRepository.GetOrder(orderId);
     }
@@ -42,43 +46,49 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("ReceivingOrders")]
-    public async Task<Order[]> ReceivingOrder(UserAuthentication user)
+    public async Task<Order[]> ReceivingOrder([FromForm] UserAuthentication user)
     {
         return await _userRepository.ReceivingOrders(user);
     }
-    
+
+    #endregion
+
+    #region Add
+
     [HttpPost("Add")]
-    public async Task<User> AddUser([FromForm]User user)
+    public async Task<User> AddUser([FromForm] User user)
     {
         return await _userRepository.AddUser(user);
     }
 
-    public async Task AddFeedbackToEmployer(Feedback feedback)
+    [HttpPost("AddOrder")]
+    public async Task<Order> AddOrder([FromForm] OrderFromVie orderFromVie)
+    {
+        var user = orderFromVie.ToUserAuthentication().Result;
+        return await _userRepository.AddOrder(await orderFromVie.OrderVieToOrder(), user);
+    }
+
+    public async Task AddFeedbackToEmployer([FromForm] Feedback feedback)
     {
         await _userRepository.AddFeedbackToEmployer(feedback);
     }
 
+    #endregion
+
     [HttpPost("UpdateUser")]
-    public async Task<User> ChangeUser(User user)
+    public async Task<User> ChangeUser([FromForm] User user)
     {
         return await _userRepository.UpdateUser(user);
     }
 
-    [HttpPost("AddOrder")]
-    public async Task<Order> AddOrder([FromForm]OrderFromVie order)
-    {
-        // return await order.OrderVieToOrder();
-        return await _userRepository.AddOrder(await order.OrderVieToOrder());
-    }
-
     [HttpPost("UpdateOrder")]
-    public async Task<Order> ChangeOrder(Order order)
+    public async Task<Order> ChangeOrder([FromForm] Order order)
     {
         return await _userRepository.UpdateOrder(order);
     }
 
     [HttpPost("Feedback")]
-    public async Task<bool> PushMailToExecutor(Feedback feedback)
+    public async Task<bool> PushMailToExecutor([FromForm] Feedback feedback)
     {
         return await _userRepository.PushMailToExecutor(feedback);
     }

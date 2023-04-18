@@ -12,10 +12,9 @@ public class CitiesController : ControllerBase
     public CitiesController(ICityRepository cityRepository) => _cityRepository = cityRepository;
 
     [HttpPost]
-    public async Task<ActionResult> AddCity([FromBody] City city)
+    public async Task<ActionResult> AddCity([FromForm] City city)
     {
-        var b = await _cityRepository.AddCity(city);
-        return Ok(b); //new CreatedAtRouteResult("GetCity", new { id = cities.Id }, cities);
+        return Ok(await _cityRepository.AddCity(city)); //new CreatedAtRouteResult("GetCity", new { id = cities.Id }, cities);
     }
 
     [HttpGet("GetAll")]

@@ -13,8 +13,8 @@ public class HandicraftController : ControllerBase
     public HandicraftController(IHandcraftRepository handcraftRepository) => _handcraftRepository = handcraftRepository;
 
     [HttpPost("GetHandicraft")]
-    public async Task<Handcraft> GetHandicraft(UserAuthentication user)
+    public async Task<Handcraft> GetHandicraft([FromForm] UserAuthentication user)
     {
-        return await _handcraftRepository.GetHandicraft(user);
+        return await _handcraftRepository.GetHandcraft(user);
     }
 }

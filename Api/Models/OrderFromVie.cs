@@ -1,43 +1,39 @@
-﻿using Domain.Models;
+﻿using DataAccess.models;
+using Domain.Models;
 using Microsoft.AspNetCore.Http;
 
 namespace Api.Models;
 
 public class OrderFromVie
 {
-    public int Id { get; set; } = 0;
-    public string MiniDescription { get; set; } = "";
-    public string Description { get; set; } = "";
+    public string? MiniDescription { get; set; } = "";
+    public string? Description { get; set; } = "";
     public bool GetOrder { get; set; }
     public bool CompletedOrder { get; set; }
     public int Price { get; set; } = 0;
-
     public string? NameCity { get; set; } = "";
-
-    // public Time? Time { get; set; } = new Time();
     public string? DateStart { get; set; } = "";
     public string? DateEnd { get; set; } = "";
     public int CategoryWork { get; set; } = 0;
     public int Work { get; set; } = 0;
     public IFormFile? Photo { get; set; }
-    public int UserId { get; set; }
-    public int CompanyId { get; set; } = 0;
-    public int HandcraftId { get; set; } = 0;
+    public string Login { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 
     public async Task<Order> OrderVieToOrder()
     {
-        // todo накинуть проверку
         var time = new Time { DateStart = DateStart, DateEnd = DateEnd };
-
         var order = new Order
         {
-            Id = Id, MiniDescription = MiniDescription, Description = Description, GetOrder = GetOrder,
+            Id = 0, MiniDescription = MiniDescription, Description = Description, GetOrder = GetOrder,
             CompletedOrder = CompletedOrder, Price = Price, NameCity = NameCity, Time = time,
-            CategoryJob = CategoryWork.ToString(), UserId = UserId, Job = Work.ToString()
+            CategoryJob = CategoryWork.ToString(), Job = Work.ToString()
         };
         order.NameCity ??= "";
         order.CategoryJob ??= "";
         order.Job ??= "";
+        time.DateStart ??= "";
+        time.DateEnd ??= "";
 
         if (Photo != null)
         {
@@ -57,4 +53,7 @@ public class OrderFromVie
 
         return order;
     }
+
+    public Task<UserAuthentication> ToUserAuthentication() =>
+        Task.FromResult(new UserAuthentication { Login = Login, Password = Password });
 }

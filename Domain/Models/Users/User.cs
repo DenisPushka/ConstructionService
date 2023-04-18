@@ -14,8 +14,7 @@ public class User
     public string? Patronymic { get; set; } = string.Empty;
     public string? DateOfBrith { get; set; } = string.Empty;
     public string? Phone { get; set; } = string.Empty;
-    public int CityId { get; set; }
-
+    public string? CityName { get; set; } = string.Empty;
     public byte[]? Image { get; set; }
     public string? Email { get; set; } = string.Empty;
     public string? Password { get; set; }  = string.Empty;

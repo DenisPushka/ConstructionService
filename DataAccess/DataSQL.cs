@@ -34,11 +34,8 @@ public class DataSql
         {
             while (reader.ReadAsync().Result)
             {
-                var a = reader.GetOrdinal("CityId");
                 var id = (int)reader.GetValue(0);
-
-                var b = reader.GetOrdinal("CityName");
-                var name = reader.GetString(b);
+                var name = reader.GetValue(1).ToString();
                 listCity.Add(new City { Id = id, NameCity = name });
             }
         }
@@ -64,6 +61,7 @@ public class DataSql
         {
             res = (int)reader.GetValue(0);
         }
+
         return res != 0;
         // если есть в компании c
         // если пользоваетль то u
@@ -86,7 +84,7 @@ public class DataSql
                 var id = (int)reader.GetValue(0);
                 var description = reader.GetValue(1).ToString();
                 var price = (int)reader.GetValue(2);
-                subscriptions.Add(new Subscription {Id = id, Description = description, Price = price});
+                subscriptions.Add(new Subscription { Id = id, Description = description, Price = price });
             }
         }
 

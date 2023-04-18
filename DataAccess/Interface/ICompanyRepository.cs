@@ -18,9 +18,10 @@ public interface ICompanyRepository
     Task<Company> AddCompany(Company company);
     Task<Company> UpdateInfoCompany(Company company);
     Task<Company> UpdateRating(Company company);
-    
+    Task<Company> UpdateSubscription(Company company);
+
     Task TakeOrder(UserAuthentication company, int orderId);
-    Task RemoveOrder(int orderId, int companyId, int handcraftId);
+    Task RemoveOrder(int orderId);
     Task<bool> PushMailToCustomer(Feedback feedback);
 
     Task TakeWork(Work work, Company company, Handcraft handcraft);

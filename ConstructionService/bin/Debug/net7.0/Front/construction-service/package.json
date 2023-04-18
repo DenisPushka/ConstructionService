@@ -4,17 +4,25 @@
   "proxy": "https://localhost:44380",
   "private": true,
   "dependencies": {
+    "@preact/signals": "^1.1.3",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "bootstrap": "^5.2.3",
+    "cors": "^2.8.5",
+    "preact": "^10.13.2",
+    "preact-hooks": "^0.0.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.2",
     "react-dom": "^18.2.0",
+    "react-redux": "^8.0.5",
     "react-router-dom": "^6.8.2",
+    "react-router-redux": "^4.0.8",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "cors": "^2.8.5"
+    "redux": "^4.2.1",
+    "redux-devtools-extension": "^2.13.9",
+    "redux-thunk": "^2.4.2",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -20,7 +20,6 @@
     <ItemGroup>
       <Folder Include="Front" />
       <Folder Include="Front\construction-service\src\Pages" />
-      <Folder Include="Front\construction-service\src\Reducers" />
     </ItemGroup>
 
 </Project>

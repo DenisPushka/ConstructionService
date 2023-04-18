@@ -7,9 +7,6 @@ public class Company
     public string? Description { get; set; } = string.Empty;
     public int Rating { get; set; }
     public string? Subscription { get; set; }
-
-    // Контакт компании
-    public int ContactCompanyId { get; set; }
     public string? Phone { get; set; } = string.Empty;
     public string? Email { get; set; } = string.Empty;
     public string? Password { get; set; } = string.Empty;

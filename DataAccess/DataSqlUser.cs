@@ -15,37 +15,65 @@ public class DataSqlUser
     public async Task<User> Add(User user)
     {
         await using var connection = new SqlConnection(ConnectionString);
-        await connection.OpenAsync();
+        try
+        {
+            await connection.OpenAsync();
+            var command = new SqlCommand(
+                "INSERT INTO Users (CountMadeOrder, LastName, Name, Patronymic, " +
+                "DateOfBrith, Phone, CityId, Photo, Email, Password, LinkTelegram, LinkVk) " +
+                "VALUES " +
+                $"(0, \'{user.LastName}\', \'{user.Name}\', \'{user.Patronymic}\', \'{user.DateOfBrith}\', " +
+                $"\'{user.Phone}\', (select CityId from Cities where CityName = \'{user.CityName}\'), {user.Image}, \'{user.Email}\', \'{user.Password}\', " +
+                $"\'{user.LinkTelegram}\', \'{user.LinkVk}\') " +
+                "GO " +
+                "select * from Users " +
+                "left join Cities C on C.CityId = Users.CityId " +
+                $"where Email = \'{user.Email}\' and password = \'{user.Password}\'", connection);
 
-        var command = new SqlCommand(
-            "INSERT INTO dbo.Users ([CountMadeOrder], [LastName], [Name], [Patronymic]," +
-            "[DateOfBrith], [Phone], [CityId], [Photo], [Email], [Password], [LinkTelegram], [LinkVk])" +
-            "VALUES" +
-            $"(\'{user.LastName}\', \'{user.Name}\', \'{user.Patronymic}\', \'{user.DateOfBrith}\'," +
-            $"\'{user.Phone}\', {user.CityId}, {user.Image}, \'{user.Email}\', \'{user.Password}\'," +
-            $"\'{user.LinkTelegram}\', \'{user.LinkVk}\' GO", connection);
+            await using var reader = await command.ExecuteReaderAsync();
+            var customerGet = new User();
+            if (reader.HasRows && reader.ReadAsync().Result)
+            {
+                customerGet.CountMadeOrders = (int)reader.GetValue(1);
+                customerGet.LastName = reader.GetValue(2).ToString();
+                customerGet.Name = reader.GetValue(3).ToString();
+                customerGet.Patronymic = reader.GetValue(4).ToString();
+                customerGet.DateOfBrith = reader.GetValue(5).ToString();
+                customerGet.Phone = reader.GetValue(6).ToString();
+                customerGet.CityName = reader.GetValue(14).ToString();
+                customerGet.Image = (byte[]?)reader.GetValue(8);
+                customerGet.Email = reader.GetValue(9).ToString();
+                customerGet.Password = reader.GetValue(10).ToString();
+                customerGet.LinkTelegram = reader.GetValue(11).ToString();
+                customerGet.LinkVk = reader.GetValue(12).ToString();
+            }
 
-        await using var reader = await command.ExecuteReaderAsync();
-        return await Get(new UserAuthentication { Login = user.Email, Password = user.Password });
+            return customerGet;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new User();
+        }
     }
 
-    public async Task<Order> AddOrder(Order order)
+    public async Task<Order> AddOrder(Order order, UserAuthentication user)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
         var query = "insert into Times (DateStart, DateEnd, CountDay, CountRemainingDay) " +
-                    "values (@dateStart, @dateEnd, @countDay, @countRemainDay) " +
-                    "insert into Orders (minidescription, description, price, userid, cityid, TimeId, typejobid, jobid, example) " +
-                    $"values (@miniDescription, @description, @price, @userId, (select (CityId) from Cities where CityName = \'{order.NameCity}\'), (SELECT MAX(TimeId) FROM Times), @typeJobId, @jobId, @example);" +
+                    "values (@dateStart, @dateEnd, @countDay, @countRemainDay); " +
+                    "insert into Orders (MiniDescription, description, price, userId, cityId, TimeId, typeJobId, jobId, example) " +
+                    $"values (@miniDescription, @description, @price, (select UserId from Users where Email = \'{user.Login}\'), " +
+                    $"(select (CityId) from Cities where CityName = \'{order.NameCity}\'), " +
+                    "(SELECT MAX(TimeId) FROM Times), @typeJobId, @jobId, @example); " +
                     " SELECT MAX(OrderId) FROM Orders";
 
         var command = new SqlCommand(query, connection);
         command.Parameters.AddWithValue("@miniDescription", order.MiniDescription);
         command.Parameters.AddWithValue("@description", order.Description);
         command.Parameters.AddWithValue("@price", order.Price);
-        command.Parameters.AddWithValue("@userId", order.UserId);
-        // command.Parameters.AddWithValue("@time", order.Time);
         command.Parameters.AddWithValue("@typeJobId", int.Parse(order.CategoryJob));
         command.Parameters.AddWithValue("@jobId", int.Parse(order.Job));
         command.Parameters.AddWithValue("@example", order.Photo);
@@ -75,7 +103,6 @@ public class DataSqlUser
 
         await using var reader = await command.ExecuteReaderAsync();
     }
-    
 
     #endregion
 
@@ -87,20 +114,20 @@ public class DataSqlUser
         await connection.OpenAsync();
 
         var command = new SqlCommand(
-            "UPDATE dbo.Users SET" +
-            "[CountMadeOrders] = " + user.CountMadeOrders +
-            "[LastName] = " + user.LastName +
-            ",[Name] = " + user.Name +
-            ",[Patronymic] = " + user.Patronymic +
-            ",[DateOfBrith] = " + user.DateOfBrith +
-            ",[Phone] = " + user.Phone +
-            ",[CityId] = " + user.CityId +
-            ",[Photo] = " + user.Image +
-            ",[Email] = " + user.Email +
-            ",[Password] = " + user.Password +
-            ",[LinkTelegram] = " + user.LinkTelegram +
-            ",[LinkVk] = " + user.LinkVk +
-            "WHERE Email = " + user.Email +
+            "UPDATE Users SET " +
+            $"CountMadeOrders = {user.CountMadeOrders}, " +
+            $"LastName = \'{user.LastName}\', " +
+            $"Name = \'{user.Name}\', " +
+            $"Patronymic =  \'{user.Patronymic}\', " +
+            $"DateOfBrith = \'{user.DateOfBrith}\', " +
+            $"Phone =  \'{user.Phone}\', " +
+            $"CityId = (select CityId from Cities where CityName = \'{user.CityName}\'), " +
+            $"Photo = {user.Image}, " +
+            $"Email = \'{user.Email}\', " +
+            $"Password = \'{user.Password}\', " +
+            $"LinkTelegram =  \'{user.LinkTelegram}\', " +
+            $"LinkVk =  \'{user.LinkVk}\', " +
+            $"where Email = \'{user.Email}\' " +
             "GO", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -113,21 +140,20 @@ public class DataSqlUser
         await connection.OpenAsync();
 
         var command = new SqlCommand(
-            "UPDATE Orders SET" +
-            $"Description = '{order.Description}'," +
-            $"MiniDescription = {order.MiniDescription}," +
-            $"Price = {order.Price}" +
-            $"CityId = {order.NameCity}" +
-            $"TimeId = {order.Time}" +
-            $"TypeJobId = {order.CategoryJob}" +
-            $"JobId = {order.Job}" +
-            $"Example = {order.Time}" +
+            "UPDATE Orders SET " +
+            $"Description = '{order.Description}', " +
+            $"MiniDescription = {order.MiniDescription}, " +
+            $"Price = {order.Price}," +
+            $"CityName = \'{order.NameCity}\'," +
+            $"TimeId = {order.Time}, " +
+            $"TypeJobId = {order.CategoryJob}," +
+            $"JobId = {order.Job}," +
+            $"Example = {order.Photo} " +
             $"WHERE OrderId = {order.Id}", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
         return await GetOrder(order.Id);
     }
-    
 
     #endregion
 
@@ -140,7 +166,9 @@ public class DataSqlUser
 
         var command =
             new SqlCommand(
-                $"select * from dbo.Users where email = \'{user.Login}\' " +
+                $"select * from Users " +
+                $"left join Cities C on C.CityId = Users.CityId " +
+                $"where Email = \'{user.Login}\' " +
                 $"and password = \'{user.Password}\'",
                 connection);
         var customerGet = new User();
@@ -153,9 +181,8 @@ public class DataSqlUser
             customerGet.Patronymic = reader.GetValue(4).ToString();
             customerGet.DateOfBrith = reader.GetValue(5).ToString();
             customerGet.Phone = reader.GetValue(6).ToString();
-            customerGet.CityId = (int)reader.GetValue(7);
-            var obj = reader.GetValue(8);
-            customerGet.Image = obj == typeof(DBNull) ? Array.Empty<byte>() : (byte[])obj;
+            customerGet.CityName = reader.GetValue(14).ToString();
+            customerGet.Image = (byte[]?)reader.GetValue(8);
             customerGet.Email = reader.GetValue(9).ToString();
             customerGet.Password = reader.GetValue(10).ToString();
             customerGet.LinkTelegram = reader.GetValue(11).ToString();
@@ -170,7 +197,7 @@ public class DataSqlUser
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var command = new SqlCommand("select * from Users", connection);
+        var command = new SqlCommand("select * from Users left join Cities C on C.CityId = Users.CityId", connection);
         var users = new List<User>();
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -185,7 +212,7 @@ public class DataSqlUser
                 var patronymic = reader.GetValue(4).ToString();
                 var dateOfBr = reader.GetValue(5).ToString();
                 var phone = reader.GetValue(6).ToString();
-                var city = (int)reader.GetValue(7);
+                var city = reader.GetValue(14).ToString();
                 var photo = (byte[])reader.GetValue(8);
                 var email = reader.GetValue(9).ToString();
                 var password = reader.GetValue(10).ToString();
@@ -194,7 +221,7 @@ public class DataSqlUser
                 users.Add(new User
                 {
                     Id = id, CountMadeOrders = countMade, Name = name, LastName = lastname, Patronymic = patronymic,
-                    DateOfBrith = dateOfBr, Phone = phone, CityId = city, Image = photo, Email = email,
+                    DateOfBrith = dateOfBr, Phone = phone, CityName = city, Image = photo, Email = email,
                     Password = password,
                     LinkTelegram = linkT, LinkVk = linkVk
                 });
@@ -212,7 +239,7 @@ public class DataSqlUser
         var command = new SqlCommand(
             "select CountMadeOrder, LastName, Name, Patronymic, DateOfBrith, Phone, Photo, Email, Password, " +
             "LinkTelegram, LinkVk, CityName from Users INNER JOIN " +
-            "Cities ON dbo.Users.CityId = dbo.Cities.CityId " +
+            "Cities ON dbo.Users.CityName = dbo.Cities.CityName " +
             $"where dbo.Cities.CityName = \'{nameCity}\'", connection);
         var users = new List<User>();
 
@@ -337,8 +364,9 @@ public class DataSqlUser
     public async Task<Order[]> ReceivingOrders(UserAuthentication userAuth)
     {
         await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
         var command = new SqlCommand(
-            "SELECT OrderId, MiniDescription, o.Description, GetOrder, CompletedOrder, Price, UserId,CityName, NameJob" +
+            "SELECT OrderId, MiniDescription, o.Description, GetOrder, CompletedOrder, Price, o.UserId, CityName, NameJob" +
             " FROM  Orders o " +
             "left join Cities C on o.CityId = C.CityId " +
             "left join Times T on o.TimeId = T.TimeId " +
@@ -369,6 +397,7 @@ public class DataSqlUser
             }
         }
 
+        await connection.CloseAsync();
         return orders.ToArray();
     }
 
