@@ -11,14 +11,15 @@ public class AuthorizationController : ControllerBase
     private readonly IAuthenticationRepository _authenticationRepository;
     private readonly IUserRepository _userRepository;
     private readonly ICompanyRepository _companyRepository;
-    // private readonly IHandcraftRepository _handcraftRepository;
+    private readonly IHandcraftRepository _handcraftRepository;
 
-    public AuthorizationController(IAuthenticationRepository authenticationRepository, IUserRepository userRepository, ICompanyRepository companyRepository)
+    public AuthorizationController(IAuthenticationRepository authenticationRepository, IUserRepository userRepository,
+        ICompanyRepository companyRepository, IHandcraftRepository handcraftRepository)
     {
         _authenticationRepository = authenticationRepository;
         _userRepository = userRepository;
         _companyRepository = companyRepository;
-        // _handcraftRepository = handcraftRepository;
+        _handcraftRepository = handcraftRepository;
     }
 
     // Аунтефикация
@@ -40,12 +41,12 @@ public class AuthorizationController : ControllerBase
             return uch;
         }
 
-        // var handcraft = await _handcraftRepository.GetHandicraft(userAuthentication);
-        // if (!handcraft.Email.Equals(""))
-        // {
-        //     uch.Handcraft = handcraft;
-        //     return uch;
-        // }
+        var handcraft = await _handcraftRepository.GetHandcraft(userAuthentication);
+        if (!handcraft.Email.Equals(""))
+        {
+            uch.Handcraft = handcraft;
+            return uch;
+        }
 
         return uch;
     }

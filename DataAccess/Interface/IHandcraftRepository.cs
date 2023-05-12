@@ -8,7 +8,6 @@ namespace DataAccess.Interface;
 public interface IHandcraftRepository
 {
     Task<Handcraft> GetHandcraft(UserAuthentication handcraft);
-    // Task<Handcraft> GetAllInfoCompany(Handcraft handcraft);  // -- ???
     Task<Handcraft[]> GetAllHandcrafts();
     Task<Handcraft[]> GetHandcraftFromCity(string city);
     Task<Feedback[]> GetFeedbacks(Handcraft handcraft);
@@ -16,11 +15,12 @@ public interface IHandcraftRepository
     Task<Equipment[]> GetEquipments(UserAuthentication handcraft);
 
     Task<Handcraft> AddHandcraft(Handcraft handcraft);
-    Task<Handcraft> UpdateInfoCompany(Handcraft handcraft); 
+    Task<Handcraft> UpdateInfoHandcraft(Handcraft handcraft); 
     Task<Handcraft> UpdateRating(Handcraft handcraft);
     Task<Handcraft> UpdateSubscription(Handcraft handcraft);
 
     Task TakeOrder(UserAuthentication handcraft, int orderId);
+    Task CompletedOrder(UserAuthentication handcraft, int orderId);
     Task RemoveOrder(int orderId);
     Task<bool> PushMailToCustomer(Feedback feedback);
 

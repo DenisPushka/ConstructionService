@@ -17,9 +17,10 @@ public class Startup
         services.AddTransient<DataSqlCompany>();
         services.AddTransient<DataSqlFeedBack>();
         services.AddTransient<DataSqlService>();
+        services.AddTransient<DataSqlHandCraft>();
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<ICompanyRepository, CompanyRepository>();
-        // services.AddTransient<IHandcraftRepository, HandcraftRepository>();
+        services.AddTransient<IHandcraftRepository, HandcraftRepository>();
         services.AddTransient<ICityRepository, CityRepository>();
         services.AddTransient<ISubscriptionRepository, SubscriptionRepository>();
         services.AddTransient<IServiceRepository, ServiceRepository>();

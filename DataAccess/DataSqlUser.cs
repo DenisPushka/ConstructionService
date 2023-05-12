@@ -113,22 +113,22 @@ public class DataSqlUser
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
+        user.LinkTelegram ??= "";
+        user.LinkVk ??= "";
+        user.Patronymic ??= "";
+
         var command = new SqlCommand(
-            "UPDATE Users SET " +
-            $"CountMadeOrders = {user.CountMadeOrders}, " +
-            $"LastName = \'{user.LastName}\', " +
-            $"Name = \'{user.Name}\', " +
-            $"Patronymic =  \'{user.Patronymic}\', " +
-            $"DateOfBrith = \'{user.DateOfBrith}\', " +
-            $"Phone =  \'{user.Phone}\', " +
-            $"CityId = (select CityId from Cities where CityName = \'{user.CityName}\'), " +
-            $"Photo = {user.Image}, " +
-            $"Email = \'{user.Email}\', " +
-            $"Password = \'{user.Password}\', " +
-            $"LinkTelegram =  \'{user.LinkTelegram}\', " +
-            $"LinkVk =  \'{user.LinkVk}\', " +
-            $"where Email = \'{user.Email}\' " +
-            "GO", connection);
+         " UPDATE Users SET " +
+         $"LastName       = \'{user.LastName}\', " +
+         $"Name           = \'{user.Name}\', " +
+         $"Patronymic     = \'{user.Patronymic}\', " +
+         $"DateOfBrith    = \'{user.DateOfBrith}\', " +
+         $"Phone          = \'{user.Phone}\', " +
+         $"CityId         = (select CityId from Cities where CityName = \'{user.CityName}\'), " +
+         $"LinkTelegram   = \'{user.LinkTelegram}\', " +
+         $"LinkVk         = \'{user.LinkVk}\' " +
+         $"where Email = \'{user.Email}\' "
+            , connection);
 
         await using var reader = await command.ExecuteReaderAsync();
         return await Get(new UserAuthentication { Login = user.Email, Password = user.Password });
@@ -399,6 +399,30 @@ public class DataSqlUser
 
         await connection.CloseAsync();
         return orders.ToArray();
+    }
+
+    public async Task<User> GetUserWithOrder(int orderId)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand($"select * from Users where UserId = (select UserId from Orders where OrderId = {orderId})", connection);
+        var user = new User();
+
+        await using var reader = await command.ExecuteReaderAsync();
+        if (reader.HasRows && reader.ReadAsync().Result)
+        {
+            user.CountMadeOrders = (int)reader.GetValue(1);
+            user.LastName = reader.GetValue(2).ToString();
+            user.Name = reader.GetValue(3).ToString();
+            user.Phone = reader.GetValue(6).ToString();
+            user.Image = (byte[])reader.GetValue(8);
+            user.Email = reader.GetValue(9).ToString();
+            user.LinkTelegram = reader.GetValue(11).ToString();
+            user.LinkVk = reader.GetValue(12).ToString();
+        }
+        await connection.CloseAsync();
+        return user;
     }
 
     #endregion

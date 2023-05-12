@@ -54,6 +54,21 @@ public class CompanyRepository : ICompanyRepository
         return await _sqlService.GetEquipmentsCompany(company);
     }
 
+    public async Task<int> GetOrdersTaken(UserAuthentication user)
+    {
+        return await _sqlCompany.GetOrdersTaken(user);
+    }
+
+    public async Task<Order[]> GetOrders(UserAuthentication user)
+    {
+        return await _sqlCompany.GetOrders(user);
+    }
+
+    public async Task<Company[]> GetCompanyWithEquipment(int equipmentId)
+    {
+        return await _sqlCompany.GetCompanyWithEquipment(equipmentId);
+    }
+
     public async Task<Company> AddCompany(Company company)
     {
         return await _sqlCompany.Add(company);

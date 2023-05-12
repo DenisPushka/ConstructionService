@@ -14,6 +14,9 @@ public interface ICompanyRepository
     Task<Feedback[]> GetFeedbacks(Company company);
     Task<Work[]> GetWorks(UserAuthentication company);
     Task<Equipment[]> GetEquipments(UserAuthentication company);
+    Task<int> GetOrdersTaken(UserAuthentication user);
+    Task<Order[]> GetOrders(UserAuthentication user);
+    Task<Company[]> GetCompanyWithEquipment(int equipmentId);
 
     Task<Company> AddCompany(Company company);
     Task<Company> UpdateInfoCompany(Company company);

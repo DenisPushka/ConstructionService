@@ -13,6 +13,7 @@ public interface IUserRepository
     Task<Order> GetOrder(int orderId);
     Task<Order[]> GetOrders();
     Task<Order[]> ReceivingOrders(UserAuthentication user);
+    Task<User> GetUserWithOrder(int orderId);
 
     // Добавление
     Task<User> AddUser(User user);

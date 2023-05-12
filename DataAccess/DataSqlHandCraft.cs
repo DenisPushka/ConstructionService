@@ -24,7 +24,7 @@ public class DataSqlHandCraft
                 "FROM HandCrafts H " +
                 "left outer join Subscriptions S on H.SubscriptionId = S.SubscriptionId " +
                 "left join ContactHandCrafts CHC on H.HandCraftId = CHC.HandCraftId " +
-                "left outer join Cities C on C.CityName = CHC.CityName " +
+                "left outer join Cities C on C.CityId = CHC.CityId " +
                 $"WHERE Email = \'{handcraft.Login}\' and Password = \'{handcraft.Password}\'",
                 connection);
 
@@ -205,7 +205,6 @@ public class DataSqlHandCraft
         }
     }
 
-    
     public async Task<Handcraft> UpdateRating(Handcraft handcraft)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -249,7 +248,7 @@ public class DataSqlHandCraft
         await using var reader = await command.ExecuteReaderAsync();
     }
 
-    public async Task CompletedOrder(UserAuthentication company, int orderId)
+    public async Task CompletedOrder(UserAuthentication handcraft, int orderId)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
@@ -259,7 +258,7 @@ public class DataSqlHandCraft
             $"WHERE OrderId = {orderId} " +
             "update HandCrafts set " +
             "NumberOfOrdersInProgress = NumberOfOrdersInProgress - 1 " +
-            $"where Email = \'{company.Login}\'",
+            $"where Email = \'{handcraft.Login}\'",
             connection);
         await connection.CloseAsync();
         await using var reader = await command.ExecuteReaderAsync();

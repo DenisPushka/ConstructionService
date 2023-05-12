@@ -3,9 +3,7 @@ using DataAccess.Interface;
 using DataAccess.models;
 using Domain.Models;
 using Domain.Models.Users;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace Api.Controllers;
 
@@ -51,6 +49,12 @@ public class UserController : ControllerBase
         return await _userRepository.ReceivingOrders(user);
     }
 
+    [HttpGet("GetUserWithOrder/{orderId:int}")]
+    public async Task<User> GetUserWithOrder([FromRoute] int orderId)
+    {
+        return await _userRepository.GetUserWithOrder(orderId);
+    }
+
     #endregion
 
     #region Add
@@ -78,6 +82,8 @@ public class UserController : ControllerBase
     [HttpPost("UpdateUser")]
     public async Task<User> ChangeUser([FromForm] User user)
     {
+        if (user.Email.Equals(""))
+            return new User();
         return await _userRepository.UpdateUser(user);
     }
 

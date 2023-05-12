@@ -46,6 +46,11 @@ public class UserRepository : IUserRepository
         return await _context.ReceivingOrders(user);
     }
 
+    public async Task<User> GetUserWithOrder(int orderId)
+    {
+        return await _context.GetUserWithOrder(orderId);
+    }
+
     public async Task<User> AddUser(User user)
     {
         return await _context.Add(user);

@@ -65,6 +65,24 @@ public class CompanyController : ControllerBase
         return await _companyRepository.GetEquipments(user);
     }
 
+    [HttpPost("GetOrdersTaken")]
+    public async Task<int> GetOrdersTaken([FromForm] UserAuthentication user)
+    {
+        return await _companyRepository.GetOrdersTaken(user);
+    }
+    
+    [HttpPost("GetOrders")]
+    public async Task<Order[]> GetOrders([FromForm] UserAuthentication company)
+    {
+        return await _companyRepository.GetOrders(company);
+    }
+
+    [HttpGet("CompanyWithEquipment/{equipmentId:int}")]
+    public async Task<Company[]> GetCompanyWithEquipment([FromRoute]int equipmentId)
+    {
+        return await _companyRepository.GetCompanyWithEquipment(equipmentId);
+    }
+    
     #endregion
 
     #region Add
@@ -146,6 +164,22 @@ public class CompanyController : ControllerBase
         var work = JsonConvert.DeserializeObject<Work>(workJson);
         await _companyRepository.TakeWork(work, company, new Handcraft());
     }
+    
+    [HttpPost("TakeEquipment")]
+    public async Task TakeEquipment(IFormCollection form)
+    {
+        var userJson = form["UserAuthentication"];
+        var equipmentJson = form["Equipment"];
+        var user = JsonConvert.DeserializeObject<UserAuthentication>(userJson);
+        var company = await _companyRepository.GetCompany(user);
+        if (company.Name.Equals(""))
+        {
+            return;
+        }
+
+        var equipment = JsonConvert.DeserializeObject<Equipment>(equipmentJson);
+        await _companyRepository.TakeEquipment(equipment, company, new Handcraft());
+    }
 
     [HttpPost("TakeOrder/{orderId:int}")]
     public async Task TakeOrder([FromRoute] int orderId, [FromForm] UserAuthentication company)
@@ -153,7 +187,6 @@ public class CompanyController : ControllerBase
         await _companyRepository.TakeOrder(company, orderId);
     }
 
-    // прочекать)
     [HttpDelete("RemoveOrder/{orderId:int}")]
     public async Task RemoveOrder([FromRoute] int orderId)
     {

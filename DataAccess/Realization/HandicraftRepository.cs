@@ -8,27 +8,22 @@ namespace DataAccess.Realization;
 
 public class HandcraftRepository : IHandcraftRepository
 {
-    private DataSqlHandCraft _sqlHandCraft;
+    private readonly DataSqlHandCraft _sqlHandCraft;
+    private readonly DataSqlService _sqlService;
+    private readonly DataSqlFeedBack _sqlFeedBack;
 
-    public HandcraftRepository(DataSqlHandCraft sqlHandCraft)
+    public HandcraftRepository(DataSqlHandCraft sqlHandCraft, DataSqlService sqlService, DataSqlFeedBack sqlFeedBack)
     {
         _sqlHandCraft = sqlHandCraft;
+        _sqlService = sqlService;
+        _sqlFeedBack = sqlFeedBack;
     }
 
-    public Task<Handcraft> GetHandcraft(UserAuthentication handcraft)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<Handcraft> GetHandcraft(UserAuthentication handcraft) => await _sqlHandCraft.Get(handcraft);
 
-    public Task<Handcraft[]> GetAllHandcrafts()
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<Handcraft[]> GetAllHandcrafts() => await _sqlHandCraft.GetHandcrafts();
 
-    public Task<Handcraft[]> GetHandcraftFromCity(string city)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<Handcraft[]> GetHandcraftFromCity(string city) => await _sqlHandCraft.GetHandCraftsFromCity(city);
 
     public Task<Feedback[]> GetFeedbacks(Handcraft handcraft)
     {
@@ -45,48 +40,53 @@ public class HandcraftRepository : IHandcraftRepository
         throw new NotImplementedException();
     }
 
-    public Task<Handcraft> AddHandcraft(Handcraft handcraft)
+    public async Task<Handcraft> AddHandcraft(Handcraft handcraft)
     {
-        throw new NotImplementedException();
+        return await _sqlHandCraft.Add(handcraft);
     }
 
-    public Task<Handcraft> UpdateInfoCompany(Handcraft handcraft)
+    public async Task<Handcraft> UpdateInfoHandcraft(Handcraft handcraft)
     {
-        throw new NotImplementedException();
+        return await _sqlHandCraft.UpdateInfoHandCraft(handcraft);
     }
 
-    public Task<Handcraft> UpdateRating(Handcraft handcraft)
+    public async Task<Handcraft> UpdateRating(Handcraft handcraft)
     {
-        throw new NotImplementedException();
+        return await _sqlHandCraft.UpdateRating(handcraft);
     }
 
-    public Task<Handcraft> UpdateSubscription(Handcraft handcraft)
+    public async Task<Handcraft> UpdateSubscription(Handcraft handcraft)
     {
-        throw new NotImplementedException();
+        return await _sqlHandCraft.UpdateSubscription(handcraft);
     }
 
-    public Task TakeOrder(UserAuthentication handcraft, int orderId)
+    public async Task TakeOrder(UserAuthentication handcraft, int orderId)
     {
-        throw new NotImplementedException();
+        await _sqlHandCraft.TakeOrder(handcraft, orderId);
     }
 
-    public Task RemoveOrder(int orderId)
+    public async Task CompletedOrder(UserAuthentication handcraft, int orderId)
     {
-        throw new NotImplementedException();
+        await _sqlHandCraft.CompletedOrder(handcraft, orderId);
     }
 
-    public Task<bool> PushMailToCustomer(Feedback feedback)
+    public async Task RemoveOrder(int orderId)
     {
-        throw new NotImplementedException();
+        await _sqlHandCraft.RemoveOrder(orderId);
     }
 
-    public Task TakeWork(Work work, Company company, Handcraft handcraft)
+    public async Task<bool> PushMailToCustomer(Feedback feedback)
     {
-        throw new NotImplementedException();
+        return await _sqlFeedBack.SendToContactor(feedback);
     }
 
-    public Task TakeEquipment(Equipment equipment, Company company, Handcraft handcraft)
+    public async Task TakeWork(Work work, Company company, Handcraft handcraft)
     {
-        throw new NotImplementedException();
+        await _sqlService.TakeWork(work, company, handcraft);
+    }
+
+    public async Task TakeEquipment(Equipment equipment, Company company, Handcraft handcraft)
+    {
+        await _sqlService.TakeEquipment(equipment, company, handcraft);
     }
 }

@@ -20,7 +20,8 @@ public class DataSqlCompany
 
         var command =
             new SqlCommand(
-                "SELECT Name, Company.Description, Email, Password, RatingId, S.Description FROM Company left outer join Subscriptions S on Company.SubscriptionId = S.SubscriptionId" +
+                "SELECT Name, Company.Description, Email, Password, RatingId, S.Description " +
+                "FROM Company left outer join Subscriptions S on Company.SubscriptionId = S.SubscriptionId" +
                 $" WHERE Email = \'{company.Login}\' and Password = \'{company.Password}\'",
                 connection);
 
@@ -51,7 +52,7 @@ public class DataSqlCompany
                 "left outer join Subscriptions S on Company.SubscriptionId = S.SubscriptionId " +
                 "left join ContactCompany CC on Company.CompanyId = CC.CompanyId " +
                 "left join Addresses A on CC.ContactCompanyId = A.ContactCompanyId " +
-                "left join Cities C on A.CityName = C.CityName",
+                "left join Cities C on A.CityId = C.CityId",
                 connection);
         var allCompany = new List<Company>();
         try
@@ -84,6 +85,7 @@ public class DataSqlCompany
             return allCompany.ToArray();
         }
 
+        await connection.CloseAsync();
 
         return allCompany.ToArray();
     }
@@ -193,7 +195,133 @@ public class DataSqlCompany
             }
         }
 
+        await connection.CloseAsync();
         return feedbacks.ToArray();
+    }
+
+    public async Task<int> GetOrdersTaken(UserAuthentication user)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command = new SqlCommand(
+            $"select NumberOfOrders - (select Count(*) from Orders where CompanyId = (select C.CompanyId from Company C where Email = \'{user.Login}\')) " +
+            $"from Subscriptions where SubscriptionId = (select SubscriptionId from Company where Email = \'{user.Login}\')",
+            connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        var countOrder = 0;
+        if (reader.HasRows && reader.ReadAsync().Result)
+        {
+            countOrder = (int)reader.GetValue(0);
+        }
+
+        await connection.CloseAsync();
+        return countOrder < 0 ? 0 : countOrder;
+    }
+
+    public async Task<Order[]> GetOrders(UserAuthentication company)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        try
+        {
+            await connection.OpenAsync();
+            var command =
+                new SqlCommand(
+                    "select OrderId, MiniDescription, o.Description, Price, UserId, CityName, " +
+                    "o.TimeId, DateStart, DateEnd, CountDay, NameCategory, NameJob, Example " +
+                    "from Orders o " +
+                    "left join Cities C on o.CityId = C.CityId " +
+                    "left join Times T on o.TimeId = T.TimeId " +
+                    "left join CategoriesJobs CJ on o.TypeJobId = CJ.CategoryJobId " +
+                    "left join Jobs J on o.JobId = J.JobId " +
+                    $"where CompanyId = (select CompanyId from Company where Email = \'{company.Login}\')",
+                    connection);
+
+            await using var reader = await command.ExecuteReaderAsync();
+            var orders = new List<Order>();
+            if (reader.HasRows)
+            {
+                while (reader.ReadAsync().Result)
+                {
+                    var order = new Order
+                    {
+                        Id = (int)reader.GetValue(0),
+                        MiniDescription = reader.GetValue(1).ToString(),
+                        Description = reader.GetValue(2).ToString(),
+                        Price = (int)reader.GetValue(3),
+                        UserId = (int)reader.GetValue(4),
+                        NameCity = reader.GetValue(5).ToString()
+                    };
+                    var time = new Time
+                    {
+                        Id = (int)reader.GetValue(6),
+                        DateStart = reader.GetValue(7).ToString(),
+                        DateEnd = reader.GetValue(8).ToString(),
+                        CountDay = (int)reader.GetValue(9),
+                    };
+                    order.Time = time;
+                    order.CategoryJob = reader.GetValue(10).ToString();
+                    order.Job = reader.GetValue(11).ToString();
+                    order.Photo = (byte[])reader["Example"];
+                    orders.Add(order);
+                }
+            }
+
+            return orders.ToArray();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new Order[0];
+        }
+    }
+
+    public async Task<Company[]> GetCompanyWithEquipment(int equipmentId)
+    {
+        await using var connection = new SqlConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        var command =
+            new SqlCommand(
+                "SELECT Name, Company.Description, Email, Phone, Link, CityName, Street, Home " +
+                "FROM Company " +
+                "left join ContactCompany CC on Company.CompanyId = CC.CompanyId " +
+                "left join Addresses A on CC.ContactCompanyId = A.ContactCompanyId " +
+                "left join Cities C on A.CityId = C.CityId " +
+                $"where CC.CompanyId = (select CompanyId from EquipmentsSubject where EquipmentId = {equipmentId})",
+                connection);
+        var allCompany = new List<Company>();
+        try
+        {
+            await using var reader = await command.ExecuteReaderAsync();
+            if (reader.HasRows)
+            {
+                while (reader.ReadAsync().Result)
+                {
+                    allCompany.Add(new Company
+                    {
+                        Name = reader.GetValue(0).ToString(),
+                        Description = reader.GetValue(1).ToString(),
+                        Email = reader.GetValue(2).ToString(),
+                        Phone = reader.GetValue(3).ToString(),
+                        Link = reader.GetValue(4).ToString(),
+                        CityName = reader.GetValue(5).ToString(),
+                        Street = reader.GetValue(6).ToString(),
+                        Home = reader.GetValue(7).ToString()
+                    });
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return allCompany.ToArray();
+        }
+
+        await connection.CloseAsync();
+
+        return allCompany.ToArray();
     }
 
     #endregion
@@ -236,14 +364,29 @@ public class DataSqlCompany
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var command = new SqlCommand("UPDATE Company SET " +
-                                     $"[Name] = \'{company.Name}\'," +
-                                     $"[Description] = \'{company.Description}\'," +
-                                     $"[Password] = \'{company.Password}\'," +
-                                     $"[RatingId] = {company.Rating}" +
-                                     $"[SubscriptionId] = {company.Subscription}" +
-                                     $"WHERE Email = {company.Email}" +
-                                     "GO", connection);
+        company.Link ??= "";
+        company.Street ??= "";
+        company.Home ??= "";
+        company.Phone ??= "";
+        
+        var command = new SqlCommand(
+            "UPDATE Company SET " +
+            $"Name = \'{company.Name}\', " +
+            $"Description = \'{company.Description}\' " +
+            $"where Email = \'{company.Email}\' " +
+            "UPDATE ContactCompany " +
+            $"set Phone = \'{company.Phone}\', " +
+            $"Link  = \'{company.Link}\' " +
+            $"where CompanyId = (select CompanyId from Company where Email = \'{company.Email}\') " +
+            "update Addresses " +
+            $"set CityId = (select CityId from Cities where CityName = \'{company.CityName}\'), " +
+            $"Street = \'{company.Street}\', " +
+            $"Home   = \'{company.Home}\' " +
+            "where ContactCompanyId = " +
+            "(select ContactCompanyId " +
+            "from Company " +
+            "left outer join ContactCompany CC on Company.CompanyId = CC.CompanyId " +
+            $"where Email = \'{company.Email}\') ", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
         return await Get(new UserAuthentication { Login = company.Email, Password = company.Password });
@@ -333,7 +476,7 @@ public class DataSqlCompany
             await connection.OpenAsync();
             command = new SqlCommand(
                 $"INSERT INTO NotExecuteOrders VALUES ({order.Id}, {order.CompanyId}, {order.HandcraftId}); " +
-                $"UPDATE Orders SET CompanyId = 0, HandcraftId = 0, GetOrder = 0 WHERE OrderId = {order.Id} ",
+                $"UPDATE Orders SET CompanyId = 1, HandcraftId = 1, GetOrder = 0 WHERE OrderId = {order.Id} ",
                 connection);
             await using var reader = await command.ExecuteReaderAsync();
             await connection.CloseAsync();

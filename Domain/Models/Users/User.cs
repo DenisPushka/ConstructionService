@@ -9,16 +9,15 @@ public class User
     public int CountMadeOrders { get; set; }
 
     // Контакт пользователя
-    public string? LastName { get; set; } = string.Empty;
-    public string? Name { get; set; } = string.Empty;
-    public string? Patronymic { get; set; } = string.Empty;
-    public string? DateOfBrith { get; set; } = string.Empty;
-    public string? Phone { get; set; } = string.Empty;
-    public string? CityName { get; set; } = string.Empty;
+    public string? LastName { get; set; } = "";
+    public string? Name { get; set; } = "";
+    public string? Patronymic { get; set; } = "";
+    public string? DateOfBrith { get; set; } = "";
+    public string? Phone { get; set; } = "";
+    public string? CityName { get; set; } = "";
     public byte[]? Image { get; set; }
-    public string? Email { get; set; } = string.Empty;
-    public string? Password { get; set; }  = string.Empty;
-    public string? LinkTelegram { get; set; } = string.Empty;
-    public string? LinkVk { get; set; } = string.Empty;
-    
+    public string? Email { get; set; } = "";
+    public string? Password { get; set; }  = "";
+    public string? LinkTelegram { get; set; } = "";
+    public string? LinkVk { get; set; } = "";
 }
