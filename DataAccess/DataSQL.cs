@@ -49,8 +49,6 @@ public class DataSql
         await connection.OpenAsync();
 
 
-        // TODO суть команды считается запрос на проверку пользователя (под пользователем понимается: компания, мастера и заказчик)
-        // если хоть у одного есть совпадение, то тру. Индексы на почту или(и) номер телефона
         var command = new SqlCommand($"select count(*) from Users us where us.Email = '{userAuthentication.Login}'" +
                                      $" and us.Password = '{userAuthentication.Password}'", connection);
 
