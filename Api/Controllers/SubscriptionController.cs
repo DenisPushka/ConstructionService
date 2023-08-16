@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+/// <summary>
+/// Контроллер подписки.
+/// </summary>
 [ApiController, Route("api/[controller]")]
 public class SubscriptionController : ControllerBase
 {
@@ -14,6 +17,10 @@ public class SubscriptionController : ControllerBase
         _subscription = subscription;
     }
 
+    /// <summary>
+    /// Получение подписок.
+    /// </summary>
+    /// <returns>Массив подписок.</returns>
     [HttpGet("getSubscriptions")]
     public async Task<Subscription[]> GetSubscriptions()
     {

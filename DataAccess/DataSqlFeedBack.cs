@@ -25,8 +25,7 @@ public class DataSqlFeedBack
         await using var reader = await command.ExecuteReaderAsync();
         return true;
     }
-
-    // TODO НАПИСАНИЕ ЧАТА (ТЕ ВСЕ ЧТО ДЛЯ НЕГО НУЖНО)!
+    
     /// <summary>
     /// НЕ НАПИСАНО!
     /// </summary>

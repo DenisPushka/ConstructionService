@@ -10,6 +10,11 @@ public class DataSql
     private const string ConnectionString =
         "Server=DenisBaranovski;Database=ConstructionService;Trusted_Connection=True;TrustServerCertificate=Yes;";
 
+    /// <summary>
+    /// Добавление города.
+    /// </summary>
+    /// <param name="city">Город.</param>
+    /// <returns>true - в случае успеха.</returns>
     public async Task<bool> AddCity(City city)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -21,6 +26,10 @@ public class DataSql
         return true;
     }
 
+    /// <summary>
+    /// Получние всех городов.
+    /// </summary>
+    /// <returns>Массив городов.</returns>
     public async Task<City[]> GetAllCity()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -43,6 +52,11 @@ public class DataSql
         return listCity.ToArray();
     }
 
+    /// <summary>
+    /// Аунтефикация.
+    /// </summary>
+    /// <param name="userAuthentication">Пользователя для аунтефикации.</param>
+    /// <returns>true - если есть в системе.</returns>
     public async Task<bool> Authentication(UserAuthentication userAuthentication)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -66,6 +80,10 @@ public class DataSql
         // если 'h'
     }
 
+    /// <summary>
+    /// Получение подписок.
+    /// </summary>
+    /// <returns>Подписки.</returns>
     public async Task<Subscription[]> GetSubscriptions()
     {
         await using var connection = new SqlConnection(ConnectionString);

@@ -6,6 +6,11 @@ using SqlCommand = System.Data.SqlClient.SqlCommand;
 
 namespace DataAccess;
 
+/// <summary>
+/// Реализатор запросов для компании.
+/// </summary>
+/// КР (категорий работ),
+/// ТО (тип оборудования).
 public class DataSqlCompany
 {
     private const string ConnectionString =
@@ -13,6 +18,11 @@ public class DataSqlCompany
 
     #region Get
 
+    /// <summary>
+    /// Получение компании.
+    /// </summary>
+    /// <param name="company">Пользователь для авторизации.</param>
+    /// <returns>Компания.</returns>
     public async Task<Company> Get(UserAuthentication company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -40,6 +50,10 @@ public class DataSqlCompany
         return companyGet;
     }
 
+    /// <summary>
+    /// Получение всех компаний.
+    /// </summary>
+    /// <returns>Массив компаний.</returns>
     public async Task<Company[]> GetAllCompany()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -90,6 +104,11 @@ public class DataSqlCompany
         return allCompany.ToArray();
     }
 
+    /// <summary>
+    /// Вся информация о <paramref name="company"/>.
+    /// </summary>
+    /// <param name="company">Компания.</param>
+    /// <returns>Компания со всеми данными о ней.</returns>
     public async Task<Company> GetAllInfoAboutCompany(Company company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -123,6 +142,11 @@ public class DataSqlCompany
         return companyGet;
     }
 
+    /// <summary>
+    /// Получние компаний из <paramref name="city"/>.
+    /// </summary>
+    /// <param name="city">Город, по которому идет поиск.</param>
+    /// <returns>Массив компаний.</returns>
     public async Task<Company[]> GetCompanyFromCity(string city)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -173,6 +197,11 @@ public class DataSqlCompany
     }
 
     // просмотреть
+    /// <summary>
+    /// Получение отзывов о компании.
+    /// </summary>
+    /// <param name="company">Компания.</param>
+    /// <returns>Массив отзывов.</returns>
     public async Task<Feedback[]> GetFeedbacks(Company company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -199,6 +228,11 @@ public class DataSqlCompany
         return feedbacks.ToArray();
     }
 
+    /// <summary>
+    /// Получение выполненных заказов компанией.
+    /// </summary>
+    /// <param name="user">Пользователь для авторизици.</param>
+    /// <returns>Количество выполненных заказов.</returns>
     public async Task<int> GetOrdersTaken(UserAuthentication user)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -220,6 +254,11 @@ public class DataSqlCompany
         return countOrder < 0 ? 0 : countOrder;
     }
 
+    /// <summary>
+    /// Получние заказов.
+    /// </summary>
+    /// <param name="company">Пользователь для атворизации.</param>
+    /// <returns>Массив заказов (у данного пользователя).</returns>
     public async Task<Order[]> GetOrders(UserAuthentication company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -277,6 +316,11 @@ public class DataSqlCompany
         }
     }
 
+    /// <summary>
+    /// Получение компаний, которые имеют в аренду <paramref name="equipmentId"/>.
+    /// </summary>
+    /// <param name="equipmentId">Id оборудования.</param>
+    /// <returns>Массив компаний.</returns>
     public async Task<Company[]> GetCompanyWithEquipment(int equipmentId)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -326,6 +370,11 @@ public class DataSqlCompany
 
     #endregion
 
+    /// <summary>
+    /// Добавление компании.
+    /// </summary>
+    /// <param name="company">Добавляемая комания.</param>
+    /// <returns>Добавленная компания.</returns>
     public async Task<Company> Add(Company company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -359,6 +408,11 @@ public class DataSqlCompany
 
     #region Update
 
+    /// <summary>
+    /// Обновелние компании.
+    /// </summary>
+    /// <param name="company">Обновленная комания.</param>
+    /// <returns>Обновленная комания.</returns>
     public async Task<Company> UpdateInfoCompany(Company company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -368,7 +422,7 @@ public class DataSqlCompany
         company.Street ??= "";
         company.Home ??= "";
         company.Phone ??= "";
-        
+
         var command = new SqlCommand(
             "UPDATE Company SET " +
             $"Name = \'{company.Name}\', " +
@@ -392,6 +446,11 @@ public class DataSqlCompany
         return await Get(new UserAuthentication { Login = company.Email, Password = company.Password });
     }
 
+    /// <summary>
+    /// Измененение рейтинга.
+    /// </summary>
+    /// <param name="company">Комания с изменным рейтингом.</param>
+    /// <returns>Комания с изменным рейтингом.</returns>
     public async Task<Company> UpdateRating(Company company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -404,6 +463,11 @@ public class DataSqlCompany
         return await Get(new UserAuthentication { Login = company.Email, Password = company.Password });
     }
 
+    /// <summary>
+    /// Изменение подписки.
+    /// </summary>
+    /// <param name="company">Компания с измененной подпиской.</param>
+    /// <returns>Компания с измененной подпиской.</returns>
     public async Task<Company> UpdateSubscription(Company company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -418,6 +482,11 @@ public class DataSqlCompany
 
     #endregion
 
+    /// <summary>
+    /// Взятие заказа.
+    /// </summary>
+    /// <param name="company">Компания, которая берет заказ.</param>
+    /// <param name="orderId">Id заказа.</param>
     public async Task TakeOrder(UserAuthentication company, int orderId)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -451,6 +520,10 @@ public class DataSqlCompany
         await using var reader = await command.ExecuteReaderAsync();
     }
 
+    /// <summary>
+    /// Удаление (отказ) от заказа.
+    /// </summary>
+    /// <param name="orderId">Id заказа.</param>
     public async Task RemoveOrder(int orderId)
     {
         await using var connection = new SqlConnection(ConnectionString);

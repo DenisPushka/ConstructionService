@@ -5,6 +5,9 @@ using Domain.Models.Users;
 
 namespace DataAccess;
 
+/// <summary>
+/// Реализатор запроса для пользователя.
+/// </summary>
 public class DataSqlUser
 {
     private const string ConnectionString =
@@ -12,6 +15,11 @@ public class DataSqlUser
 
     #region Add
 
+    /// <summary>
+    /// Добавление пользователя.
+    /// </summary>
+    /// <param name="user">Добавляемый пользователь.</param>
+    /// <returns>Добавленный пользователь.</returns>
     public async Task<User> Add(User user)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -57,6 +65,12 @@ public class DataSqlUser
         }
     }
 
+    /// <summary>
+    /// Добавление заказа.
+    /// </summary>
+    /// <param name="order">Заказ.</param>
+    /// <param name="user">Пользователь, к которому добавляется заказ.</param>
+    /// <returns>Добавленный заказ.</returns>
     public async Task<Order> AddOrder(Order order, UserAuthentication user)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -91,6 +105,10 @@ public class DataSqlUser
         return await GetOrder(orderId);
     }
 
+    /// <summary>
+    /// Добавление отзыва пользователю.
+    /// </summary>
+    /// <param name="feedback">Отзыв.</param>
     public async Task AddFeedbackToEmployer(Feedback feedback)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -108,6 +126,11 @@ public class DataSqlUser
 
     #region Update
 
+    /// <summary>
+    /// Изменение пользователя.
+    /// </summary>
+    /// <param name="user">Изменный пользователь.</param>
+    /// <returns>Изменный пользователь.</returns>
     public async Task<User> Update(User user)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -118,22 +141,27 @@ public class DataSqlUser
         user.Patronymic ??= "";
 
         var command = new SqlCommand(
-         " UPDATE Users SET " +
-         $"LastName       = \'{user.LastName}\', " +
-         $"Name           = \'{user.Name}\', " +
-         $"Patronymic     = \'{user.Patronymic}\', " +
-         $"DateOfBrith    = \'{user.DateOfBrith}\', " +
-         $"Phone          = \'{user.Phone}\', " +
-         $"CityId         = (select CityId from Cities where CityName = \'{user.CityName}\'), " +
-         $"LinkTelegram   = \'{user.LinkTelegram}\', " +
-         $"LinkVk         = \'{user.LinkVk}\' " +
-         $"where Email = \'{user.Email}\' "
+            " UPDATE Users SET " +
+            $"LastName       = \'{user.LastName}\', " +
+            $"Name           = \'{user.Name}\', " +
+            $"Patronymic     = \'{user.Patronymic}\', " +
+            $"DateOfBrith    = \'{user.DateOfBrith}\', " +
+            $"Phone          = \'{user.Phone}\', " +
+            $"CityId         = (select CityId from Cities where CityName = \'{user.CityName}\'), " +
+            $"LinkTelegram   = \'{user.LinkTelegram}\', " +
+            $"LinkVk         = \'{user.LinkVk}\' " +
+            $"where Email = \'{user.Email}\' "
             , connection);
 
         await using var reader = await command.ExecuteReaderAsync();
         return await Get(new UserAuthentication { Login = user.Email, Password = user.Password });
     }
 
+    /// <summary>
+    /// Обновление заказа.
+    /// </summary>
+    /// <param name="order">Обвленный заказ.</param>
+    /// <returns>Обвленный заказ.</returns>
     public async Task<Order> UpdateOrder(Order order)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -159,6 +187,11 @@ public class DataSqlUser
 
     #region Get
 
+    /// <summary>
+    /// Получение пользователя.
+    /// </summary>
+    /// <param name="user">Пользователь для авторизации.</param>
+    /// <returns>Пользователь.</returns>
     public async Task<User> Get(UserAuthentication user)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -192,6 +225,10 @@ public class DataSqlUser
         return customerGet;
     }
 
+    /// <summary>
+    /// Получение пользователей.
+    /// </summary>
+    /// <returns>Массив пользователей.</returns>
     public async Task<User[]> GetUsers()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -231,6 +268,11 @@ public class DataSqlUser
         return users.ToArray();
     }
 
+    /// <summary>
+    /// Получение пользователей из <paramref name="nameCity"/>.
+    /// </summary>
+    /// <param name="nameCity">Город, в котором происходит поиск.</param>
+    /// <returns>Массив пользователей.</returns>
     public async Task<User[]> GetUsersFromCity(string nameCity)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -271,6 +313,11 @@ public class DataSqlUser
         return users.ToArray();
     }
 
+    /// <summary>
+    /// Получение заказа.
+    /// </summary>
+    /// <param name="orderId">Id заказа.</param>
+    /// <returns>Заказ.</returns>
     public async Task<Order> GetOrder(int orderId)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -311,6 +358,10 @@ public class DataSqlUser
         return order;
     }
 
+    /// <summary>
+    /// Получение заказов.
+    /// </summary>
+    /// <returns>Массив заказов.</returns>
     public async Task<Order[]> GetOrders()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -360,7 +411,11 @@ public class DataSqlUser
         return orders.ToArray();
     }
 
-    /// Получение заказов у конкретного пользователя
+    /// <summary>
+    /// Получение заказов у <paramref name="userAuth"/>.
+    /// </summary>
+    /// <param name="userAuth">Пользователь для авторизации.</param>
+    /// <returns>Заказы у пользователя.</returns>
     public async Task<Order[]> ReceivingOrders(UserAuthentication userAuth)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -401,12 +456,19 @@ public class DataSqlUser
         return orders.ToArray();
     }
 
+    /// <summary>
+    /// Получение пользователя по заказу.
+    /// </summary>
+    /// <param name="orderId">Id заказа.</param>
+    /// <returns>Пользователь, которому принадлежит заказ.</returns>
     public async Task<User> GetUserWithOrder(int orderId)
     {
         await using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var command = new SqlCommand($"select * from Users where UserId = (select UserId from Orders where OrderId = {orderId})", connection);
+        var command =
+            new SqlCommand($"select * from Users where UserId = (select UserId from Orders where OrderId = {orderId})",
+                connection);
         var user = new User();
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -421,6 +483,7 @@ public class DataSqlUser
             user.LinkTelegram = reader.GetValue(11).ToString();
             user.LinkVk = reader.GetValue(12).ToString();
         }
+
         await connection.CloseAsync();
         return user;
     }

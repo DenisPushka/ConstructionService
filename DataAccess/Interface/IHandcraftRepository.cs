@@ -5,6 +5,9 @@ using Domain.Models.Users;
 
 namespace DataAccess.Interface;
 
+/// <summary>
+/// Интерфейс для ремесленника (имеется схожесть с интерфейсом компании).
+/// </summary>
 public interface IHandcraftRepository
 {
     Task<Handcraft> GetHandcraft(UserAuthentication handcraft);

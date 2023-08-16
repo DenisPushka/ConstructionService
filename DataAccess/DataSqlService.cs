@@ -6,6 +6,11 @@ using Domain.Models.Users;
 
 namespace DataAccess;
 
+/// <summary>
+/// Реализатор запроса для сервиса.
+/// </summary>
+/// КР (категорий работ),
+/// ТО (тип оборудования).
 public class DataSqlService
 {
     private const string ConnectionString =
@@ -13,6 +18,11 @@ public class DataSqlService
 
     #region Add
 
+    /// <summary>
+    /// Добавление сервиса.
+    /// </summary>
+    /// <param name="service">Добавляемый сервис.</param>
+    /// <returns>Массив сервисов.</returns>
     public async Task<Service[]> AddService(Service service)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -25,6 +35,11 @@ public class DataSqlService
         return await GetServices();
     }
 
+    /// <summary>
+    /// Добавление КР.
+    /// </summary>
+    /// <param name="categoryWork">КР.</param>
+    /// <returns>Массив КР.</returns>
     public async Task<CategoryWork[]> AddCategoryWork(CategoryWork categoryWork)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -37,6 +52,13 @@ public class DataSqlService
         return await GetCategoriesWork();
     }
 
+    /// <summary>
+    /// Добавление (создание) работы.
+    /// </summary>
+    /// <param name="work">Работа.</param>
+    /// <param name="company">Компания.</param>
+    /// <param name="handcraft">Ремесленник.</param>
+    /// <returns>Работа.</returns>
     public async Task<Work> AddWork(Work work, Company company, Handcraft handcraft)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -65,6 +87,11 @@ public class DataSqlService
         }
     }
 
+    /// <summary>
+    /// Добавление ТО.
+    /// </summary>
+    /// <param name="equipment">ТО.</param>
+    /// <returns>Массив ТО.</returns>
     public async Task<TypeEquipment[]> AddTypeEquipment(TypeEquipment type)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -77,7 +104,13 @@ public class DataSqlService
         return await GetTypeEquipments();
     }
 
-
+    /// <summary>
+    /// Добавление оборудования.
+    /// </summary>
+    /// <param name="equipment">Оборудование.</param>
+    /// <param name="company">Компания.</param>
+    /// <param name="handcraft">Ремесленник.</param>
+    /// <returns></returns>
     // todo переделать
     public async Task<Equipment> AddEquipment(Equipment equipment, Company company, Handcraft handcraft)
     {
@@ -110,6 +143,11 @@ public class DataSqlService
 
     #region Update
 
+    /// <summary>
+    /// Обновление работы.
+    /// </summary>
+    /// <param name="work">Обновленная работа.</param>
+    /// <returns>Обновленная работа.</returns>
     public async Task<Work> UpdateInfoAboutWork(Work work)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -126,6 +164,11 @@ public class DataSqlService
         return await GetWork(work.Name);
     }
 
+    /// <summary>
+    /// Обновление оборудования.
+    /// </summary>
+    /// <param name="equipment">Обновленное оборудование.</param>
+    /// <returns>Обновленное оборудование.</returns>
     public async Task<Equipment> UpdateInfoAboutEquipment(Equipment equipment)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -146,6 +189,11 @@ public class DataSqlService
 
     #region Get
 
+    /// <summary>
+    /// Получение работы.
+    /// </summary>
+    /// <param name="nameWork">Название работы.</param>
+    /// <returns>Работа.</returns>
     public async Task<Work> GetWork(string? name)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -165,6 +213,15 @@ public class DataSqlService
         return getWork;
     }
 
+    /// <summary>
+    /// Работы, которые предлагает компания.
+    /// </summary>
+    /// <param name="company">Компания.</param>
+    /// <returns>Массив работ.</returns>/// <summary>
+    /// Получение оборудования.
+    /// </summary>
+    /// <param name="equipmentId">Id оборудования.</param>
+    /// <returns>Оборудование.</returns>
     public async Task<Work[]> GetWorksCompany(UserAuthentication company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -195,6 +252,11 @@ public class DataSqlService
         return works.ToArray();
     }
 
+    /// <summary>
+    /// Получение оборудования.
+    /// </summary>
+    /// <param name="equipmentId">Id оборудования.</param>
+    /// <returns>Оборудование.</returns>
     public async Task<Equipment> GetEquipment(int equipmentId)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -214,6 +276,11 @@ public class DataSqlService
         return equipment;
     }
 
+    /// <summary>
+    /// Оборудования, которые предлагает компания.
+    /// </summary>
+    /// <param name="company">Компания.</param>
+    /// <returns>Массив оборудований.</returns>
     public async Task<Equipment[]> GetEquipmentsCompany(UserAuthentication company)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -243,6 +310,10 @@ public class DataSqlService
         return equipments.ToArray();
     }
 
+    /// <summary>
+    /// Получение сервисов.
+    /// </summary>
+    /// <returns>Массив сервисов.</returns>
     public async Task<Service[]> GetServices()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -268,6 +339,10 @@ public class DataSqlService
         return services.ToArray();
     }
 
+    /// <summary>
+    /// Получение КР.
+    /// </summary>
+    /// <returns>Массив КР.</returns>
     public async Task<CategoryWork[]> GetCategoriesWork()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -294,6 +369,10 @@ public class DataSqlService
         return categoryWorks.ToArray();
     }
 
+    /// <summary>
+    /// Получение ТО.
+    /// </summary>
+    /// <returns>Массив ТО.</returns>
     public async Task<TypeEquipment[]> GetTypeEquipments()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -320,6 +399,10 @@ public class DataSqlService
         return typeEquipments.ToArray();
     }
 
+    /// <summary>
+    /// Получение работ.
+    /// </summary>
+    /// <returns>Массив работ.</returns>
     public async Task<Work[]> GetWorks()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -347,6 +430,10 @@ public class DataSqlService
         return works.ToArray();
     }
 
+    /// <summary>
+    /// Получение оборудования.
+    /// </summary>
+    /// <returns>Массив оборудований.</returns>
     public async Task<Equipment[]> GetEquipments()
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -376,6 +463,12 @@ public class DataSqlService
 
     #endregion
 
+    /// <summary>
+    /// Взятие работы.
+    /// </summary>
+    /// <param name="work">Работа.</param>
+    /// <param name="company">Компания.</param>
+    /// <param name="handcraft">Ремесленник.</param>
     public async Task TakeWork(Work work, Company company, Handcraft handcraft)
     {
         await using var connection = new SqlConnection(ConnectionString);
@@ -398,6 +491,12 @@ public class DataSqlService
         }
     }
 
+    /// <summary>
+    /// Взятие оборудования.
+    /// </summary>
+    /// <param name="equipment">Оборудование.</param>
+    /// <param name="company">Компания.</param>
+    /// <param name="handcraft">Ремесленник.</param>
     public async Task TakeEquipment(Equipment equipment, Company company, Handcraft handcraft)
     {
         await using var connection = new SqlConnection(ConnectionString);

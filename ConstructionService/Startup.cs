@@ -9,6 +9,9 @@ public class Startup
     private IConfiguration Configuration { get; }
     public Startup(IConfiguration configuration) => Configuration = configuration;
 
+    /// <summary>
+    /// Конфигуратор.
+    /// </summary>
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddControllers();
