@@ -1,0 +1,24 @@
+﻿
+.card_order_o {
+    margin-top: 125px;
+    margin-left: 20%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25),
+    0 10px 10px rgba(0,0,0,0.22);
+    position: relative;
+    overflow: hidden;
+    width: 60%;
+    max-width: 100%;
+    min-height: 80px;
+    margin-bottom: 115px;
+    text-align: center;
+}
+
+.buttons{
+    width: 1.5%;    
+}
+
+.button_get{
+    margin: 1.25rem;
+}

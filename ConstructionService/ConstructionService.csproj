@@ -19,7 +19,7 @@
 
     <ItemGroup>
       <Folder Include="Front" />
-      <Folder Include="Front\construction-service\src\Pages" />
+      <Folder Include="Front\Construction-Service\src\Pages" />
     </ItemGroup>
 
 </Project>

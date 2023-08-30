@@ -1,0 +1,40 @@
+﻿
+.down_form{
+    margin-top: 100px;
+    margin-right: 10px;
+}
+
+.for_form{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 50px;
+}
+
+.colLeft {
+    margin-left: 20px;
+}
+
+.button_search{
+    position: absolute;
+    margin: 25%;
+    font-size: 20px;
+}
+
+.button_create_order{
+    color: #eeeeee;
+    width: 60%;
+    height: 90%;
+    margin-left: 23%;
+    font-size: 28px;
+}
+
+.button_choice{
+    height: 55px;
+    text-align: center;
+    line-height: 55px;
+    font-size: 20px;
+    margin-bottom: 5%;
+    color: white;
+}
+

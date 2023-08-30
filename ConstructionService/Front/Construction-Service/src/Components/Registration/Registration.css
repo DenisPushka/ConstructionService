@@ -1,0 +1,101 @@
+﻿ body{
+    background: #8f948d;
+}
+
+.form_render {
+    margin: 0 0 5% 340px;
+}
+
+.header_to_registry {
+    margin-top: 5%;
+}
+
+.input-file {
+    margin-left: 35%;
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.35rem;
+}
+
+.input-file span {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    outline: none;
+    text-decoration: none;
+    font-size: 14px;
+    vertical-align: middle;
+    color: rgb(255 255 255);
+    text-align: center;
+    border-radius: 4px;
+    background-color: #09100b;
+    line-height: 22px;
+    height: 40px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    border: none;
+    margin: 0;
+    transition: background-color 0.2s;
+}
+
+.input-file input[type=file] {
+    position: absolute;
+    z-index: -1;
+    opacity: 0;
+    display: block;
+    width: 0;
+    height: 0;
+}
+
+/* Focus */
+.input-file input[type=file]:focus + span {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+
+/* Hover/active */
+.input-file:hover span {
+    background-color: #5e5e5e;
+}
+
+.input-file:active span {
+    background-color: #2E703A;
+}
+
+/* Disabled */
+.input-file input[type=file]:disabled + span {
+    background-color: #eee;
+}
+
+.date_of_brith {
+    height: 35px;
+    font-size: 25px;
+    margin: 1.25rem;
+    width: 130px;
+    border-radius: 5px;
+    border-color: darkgray;
+    border-width: 2px;
+}
+
+.for_patronymic {
+    width: 100%;
+    height: 38px;
+    border-radius: 5px;
+    border-color: darkgray;
+    border-width: 2px;
+}
+
+.for_input_type {
+    /*width: 50%;*/
+    margin-left: 45%;
+    font-size: 25px;
+    mask-size: 14px;
+}
+
+.type_user {
+    border-radius: 5px;
+}
+
+.type_company {
+    margin-left: 15px;
+    border-radius: 5px;
+}

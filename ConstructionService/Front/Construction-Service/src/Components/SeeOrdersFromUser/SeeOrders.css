@@ -1,0 +1,34 @@
+﻿
+.form_orders_user{
+    margin-top: 100px;
+}
+
+.container_order {
+    margin-left: 30%;
+    margin-bottom: 25px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25),
+    0 10px 10px rgba(0,0,0,0.22);
+    position: relative;
+    overflow: hidden;
+    width: 45%;
+    max-width: 100%;
+    min-height: 470px;
+}
+
+.for_mini_description{
+    font-size: 40px;
+    margin-left: 45%;
+}
+
+.for_description{
+    margin: 10px 15px 15px 10px;
+    font-size: 30px;
+}
+
+.for_field{
+    margin-left: 10px;
+    margin-bottom: 10px;
+    font-size: 28px;
+}
